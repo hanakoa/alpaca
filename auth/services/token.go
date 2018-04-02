@@ -95,15 +95,15 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	success := models.MatchesHash(resource.Password, password)
+	passwordCorrect := models.MatchesHash(resource.Password, password)
 
-	l := &models.LoginAttempt{Id: utils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: success, PersonID: person.Id}
+	l := &models.LoginAttempt{Id: utils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: passwordCorrect, PersonID: person.Id}
 	if err := l.CreateLoginAttempt(svc.DB); err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	if success {
+	if passwordCorrect {
 		if person.MultiFactorRequired {
 			log.Printf("2FA required for person %d", person.Id)
 			if resetCodeID, err := uuid.NewRandom(); err != nil {
