@@ -1,0 +1,7 @@
+.github
+.idea
+bin
+docs
+chart
+scripts
+node_modules

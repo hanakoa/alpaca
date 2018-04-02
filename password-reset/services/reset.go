@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	authGRPC "github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/hanakoa/alpaca/password-reset/models"
-	"log"
 )
 
 type PasswordResetSvc struct {

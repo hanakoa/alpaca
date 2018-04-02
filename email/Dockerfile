@@ -1,9 +1,7 @@
-FROM golang:1.9.2 as builder
-ADD email /go/src/github.com/hanakoa/alpaca/email
+FROM golang:1.10 as builder
+ADD . /go/src/github.com/hanakoa/alpaca
 WORKDIR /go/src/github.com/hanakoa/alpaca/email
 RUN go get ./... && \
-    ls -la && \
-    pwd && \
     CGO_ENABLED=0 GOOS=linux go build -a -o ./bin/alpaca-email .
 
 FROM alpine:latest
