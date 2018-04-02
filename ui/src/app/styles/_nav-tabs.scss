@@ -1,0 +1,24 @@
+@import './colors.scss';
+
+.nav-tabs {
+  border: 0;
+  background-color: $background-white;
+  .nav-link {
+    border: 0;
+    border-radius: 0;
+    color: $dark-gray !important;
+    height: inherit;
+  }
+  flex-direction: row;
+  .nav-item {
+    flex: 1;
+    text-align: center;
+    height: 3rem;
+    &.active {
+      background-color: $background-white;
+    }
+    &:not(.active) {
+      background-color: $background-white;
+    }
+  }
+}

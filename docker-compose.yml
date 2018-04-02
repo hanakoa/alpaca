@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.7.2-alpine
+    container_name: alpaca-rabbitmq
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=${RABBITMQ_ERLANG_COOKIE}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_DEFAULT_VHOST}
+    ports:
+      - "5672:5672"
+
+  authApi:
+    image: hanakoa/alpaca-auth-api:latest
+    container_name: alpaca-auth-api
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=authDb
+      - DB_DATABASE=alpaca_auth
+      - DB_USER=alpaca
+      - DB_PASSWORD=password
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_HOST=rabbitmq
+      - ALPACA_SECRET=4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF
+      - ORIGIN_ALLOWED=http://localhost:8080
+    depends_on:
+      - authDb
+      - rabbitmq
+
+  authDb:
+    image: postgres:10.1-alpine
+    container_name: alpaca-auth-db
+    environment:
+      - POSTGRES_DB=alpaca_auth
+      - POSTGRES_USER=alpaca
+      - POSTGRES_PASSWORD=password
+
+  passwordResetApi:
+    image: hanakoa/alpaca-password-reset-api:latest
+    container_name: alpaca-password-reset-api
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=passwordResetDb
+      - DB_DATABASE=alpaca_password_reset
+      - DB_USER=alpaca
+      - DB_PASSWORD=password
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_HOST=rabbitmq
+      - ORIGIN_ALLOWED=http://localhost:8080
+      - GRPC_AUTH_API_HOST=authApi
+    depends_on:
+      - passwordResetDb
+      - rabbitmq
+
+  passwordResetDb:
+    image: postgres:10.1-alpine
+    container_name: alpaca-password-reset-db
+    environment:
+      - POSTGRES_DB=alpaca_password_reset
+      - POSTGRES_USER=alpaca
+      - POSTGRES_PASSWORD=password

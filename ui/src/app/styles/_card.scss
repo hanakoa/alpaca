@@ -1,0 +1,14 @@
+@import '../../../node_modules/bootstrap/scss/functions';
+@import '../../../node_modules/bootstrap/scss/variables';
+@import '../../../node_modules/bootstrap/scss/mixins/breakpoints';
+
+.card {
+  box-shadow: 5px 5px 5px rgba(81, 76, 81, 0.2);
+  width: 400px;
+}
+
+@include media-breakpoint-only(xs) {
+  .card {
+    width: 95%;
+  }
+}

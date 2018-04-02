@@ -1,0 +1,4 @@
+.idea
+node_modules
+*.min.js
+*.es5.js

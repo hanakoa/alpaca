@@ -1,0 +1,38 @@
+{{- if .Values.uiEnabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpaca-ui
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    tier: ui
+spec:
+  replicas: {{ .Values.uiReplicaCount }}
+  template:
+    metadata:
+      labels:
+        release: {{ .Release.Name }}
+        tier: ui
+    spec:
+      containers:
+        - name: alpaca-ui
+          image: hanakoa/alpaca-ui:latest
+          ports:
+            - containerPort: {{ .Values.uiServiceInternalPort }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.uiServiceInternalPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.uiServiceInternalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+{{- end }}

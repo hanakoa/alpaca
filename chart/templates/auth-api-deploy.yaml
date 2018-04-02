@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpaca-auth
+  labels:
+    app: alpaca-auth
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    tier: api
+spec:
+  replicas: {{ .Values.apiReplicaCount }}
+  template:
+    metadata:
+      labels:
+        app: alpaca-auth
+        release: {{ .Release.Name }}
+        tier: api
+    spec:
+      initContainers:
+        - name: init-db
+          image: busybox
+          command: ['sh', '-c', 'until nslookup alpaca-auth-db; do echo waiting for myservice; sleep 2; done;']
+      containers:
+        - name: alpaca-auth-api
+          image: hanakoa/alpaca-auth-api:latest
+          env:
+            - name: DB_HOST
+              value: "alpaca-auth-db"
+            - name: DB_USER
+              value: {{ .Values.authDbUsername | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.authDbPassword | quote }}
+            - name: DB_DATABASE
+              value: {{ .Values.authDbName | quote }}
+            - name: ALPACA_SECRET
+              value: "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF"
+            - name: ORIGIN_ALLOWED
+              value: "alpaca.minikube"
+            - name: RABBITMQ_ENABLED
+              value: "false"
+            - name: RABBITMQ_USER
+              value: "guest"
+            - name: RABBITMQ_PASSWORD
+              value: "guest"
+            - name: RABBITMQ_HOST
+              value: "rabbitmq"
+          ports:
+            - containerPort: {{ .Values.apiServiceInternalPort }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.apiServiceInternalPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.apiServiceInternalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}

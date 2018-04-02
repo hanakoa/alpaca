@@ -1,0 +1,20 @@
+@import './colors.scss';
+
+.btn-link {
+  color: $dark-gray;
+}
+
+.alpaca-button {
+  width: 100%;
+  text-align: center;
+  background-color: $button-red;
+  border-color: $button-red;
+  &:hover, &:active, &:focus {
+    background-color: $button-red !important;
+    border-color: $button-red !important;
+  }
+  border-radius: 0.1rem;
+  a {
+    color: $background-white;
+  }
+}

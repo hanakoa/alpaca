@@ -1,0 +1,21 @@
+authApiReplicaCount: 1
+authApiServiceType: ClusterIP
+authApiServiceExternalPort: 80
+authApiServiceInternalPort: 8080
+authApiGrpcPort: 50051
+
+authDbName: alpaca_auth
+authDbUsername: alpaca
+authDbPassword: password
+
+uiEnabled: false
+uiReplicaCount: 1
+uiServiceType: ClusterIP
+uiServiceExternalPort: 80
+uiServiceInternalPort: 80
+
+rabbitmqEnabled: false
+rabbitmqUsername: guest
+rabbitmqPassword: guest
+rabbitmqVirtualHost: '/'
+rabbitmqRoutingKey: 'person.#'

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package proto;
+
+message GetPersonRequest {
+    string emailAddress = 1;
+}
+
+message GetPersonResponse {
+    int64 personId = 1;
+}
+
+service PersonService {
+    rpc GetPerson (GetPersonRequest) returns (GetPersonResponse) {}
+}
+
+message ResetPasswordRequest {
+    int64 personId = 1;
+    string newPassword = 2;
+}
+
+message ResetPasswordResponse {
+    int64 personId = 1;
+}
+
+service ResetPasswordService {
+    rpc ResetPassword (ResetPasswordRequest) returns (ResetPasswordResponse) {}
+}

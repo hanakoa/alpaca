@@ -1,0 +1,35 @@
+@import './colors.scss';
+
+input {
+  /* Change the white to any color ;) */
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px white inset;
+  }
+
+  &:required {
+    box-shadow: none;
+  }
+
+  &:invalid {
+    box-shadow: none;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.alpaca-input {
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  border-bottom: 0.05rem solid $dark-gray;
+}
+
+.alpaca-textarea {
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  border: 0.05rem solid $dark-gray;
+}

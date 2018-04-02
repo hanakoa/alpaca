@@ -1,0 +1,20 @@
+{{- if .Values.uiEnabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: alpaca-ui
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    tier: ui
+spec:
+  type: {{ .Values.uiServiceType }}
+  ports:
+    - port: {{ .Values.uiServiceExternalPort }}
+      targetPort: {{ .Values.uiServiceInternalPort }}
+      protocol: TCP
+  selector:
+    release: {{ .Release.Name }}
+    tier: ui
+{{- end }}

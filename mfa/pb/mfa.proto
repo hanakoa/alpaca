@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package proto;
+
+message Send2FACodeRequest {
+    string resetCode = 1;
+    int64 personId = 2;
+}
+
+message Send2FACodeResponse {
+    string resetCode = 1;
+    int64 personId = 2;
+}
+
+service Send2FACodeService {
+    rpc Send2FACode (Send2FACodeRequest) returns (Send2FACodeResponse) {}
+}

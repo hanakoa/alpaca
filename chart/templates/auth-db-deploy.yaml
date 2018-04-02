@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpaca-auth-db
+  labels:
+    app: alpaca-auth
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    tier: db
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: alpaca-auth
+        release: {{ .Release.Name }}
+        tier: db
+    spec:
+      containers:
+      - image: postgres:10.1-alpine
+        name: alpaca-auth-db
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.authDbName | quote }}
+        - name: POSTGRES_USER
+          value: {{ .Values.authDbUsername | quote }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.authDbPassword | quote }}
+        ports:
+        - containerPort: 5432
+          name: postgres

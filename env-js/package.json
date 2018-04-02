@@ -1,0 +1,25 @@
+{
+  "name": "alpaca-env-js",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "buble": "^0.19.3",
+    "uglify-es": "^3.3.9"
+  },
+  "devDependencies": {
+    "prettier": "^1.11.1"
+  },
+  "scripts": {
+    "prettier": "./node_modules/.bin/prettier --write \"./**/*.{js,jsx}\"",
+    "transpile": "./node_modules/.bin/buble env.js --output env.es5.js",
+    "minify": "./node_modules/.bin/uglifyjs env.es5.js -m -o env.min.js",
+    "build": "npm run transpile && npm run minify"
+  },
+  "prettier": {
+    "bracketSpacing": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "jsxBracketSameLine": true,
+    "printWidth": 80
+  }
+}

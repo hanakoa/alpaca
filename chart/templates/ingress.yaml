@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: api-ingress
+  labels:
+    app: nginx-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: api.alpaca.minikube
+    http:
+      paths:
+      - path: /auth/
+        backend:
+          serviceName: alpaca-auth-api
+          servicePort: 8080
+#      - path: /email/
+#        backend:
+#          serviceName: alpaca-email-api
+#          servicePort: 8080
+#      - path: /mfa/
+#        backend:
+#          serviceName: alpaca-mfa-api
+#          servicePort: 8080
+#      - path: /password-reset/
+#        backend:
+#          serviceName: alpaca-password-reset-api
+#          servicePort: 8080
+  - host: alpaca.minikube
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: alpaca-ui
+          servicePort: 80
+#      - path: /config
+#        backend:
+#          serviceName: alpaca-env-js
+#          servicePort: 80
