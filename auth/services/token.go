@@ -14,19 +14,13 @@ import (
 	"log"
 	"github.com/badoux/checkmail"
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/ttacon/libphonenumber"
 )
 
 type LoginRequest struct {
 	// Login is either an email address or username
 	Login     string `json:"login"`
 	Password  string `json:"password"`
-}
-
-type LoginResponse struct {
-	// MfaCode is a UUID for the person's password reset.
-	// We send it back so the UI can re-trigger re-sends.
-	MfaCode uuid.UUID `json:"mfaCode"`
 }
 
 type TokenService struct {
@@ -54,8 +48,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	var person *models.Person
 	var err error
-	isEmail := strings.Contains(login, "@")
-	if isEmail {
+	if isEmailAddress(login) {
 		emailAddress := login
 		if len(emailAddress) > 255 {
 			utils.RespondWithError(w, http.StatusBadRequest, "Email address should not exceed 255 chars.")
@@ -65,8 +58,9 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 			utils.RespondWithError(w, http.StatusBadRequest, "Malformed email address.")
 			return
 		}
-		person = &models.Person{EmailAddress: emailAddress}
-		err = person.GetPersonByEmailAddress(svc.DB)
+		person, err = models.GetPersonByEmailAddress(svc.DB, emailAddress)
+	} else if isPhoneNumber(login) {
+		person, err = models.GetPersonByPhoneNumber(svc.DB, login)
 	} else {
 		username := login
 		if len(username) < MinUsernameLength || len(username) > MaxUsernameLength {
@@ -105,23 +99,20 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	if passwordCorrect {
 		if person.MultiFactorRequired {
-			log.Printf("2FA required for person %d", person.Id)
-			if resetCodeID, err := uuid.NewRandom(); err != nil {
-				utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			} else {
-				log.Printf("Reset code is %s", resetCodeID)
-				// TODO check RABBITMQ_ENABLED
-				if err := mfaGRPC.Send2FACode(svc.MFAClient, person.Id, resetCodeID); err != nil {
-					utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-					return
-				}
-				mfaResponse := LoginResponse{MfaCode: resetCodeID}
-				utils.RespondWithJSON(w, http.StatusOK, mfaResponse)
-			}
+			WriteMfaOptions(w, person)
 		} else {
 			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
 		}
 	} else {
 		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials.")
 	}
+}
+
+func isEmailAddress(s string) bool {
+	return strings.Contains(s, "@")
+}
+
+func isPhoneNumber(s string) bool {
+	_, err := libphonenumber.Parse(s, "US")
+	return err == nil
 }

@@ -13,14 +13,17 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"github.com/hanakoa/alpaca/auth/services"
 )
 
 var a App
 
 func TestMain(m *testing.M) {
-	a = App{}
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	a = App{RabbitmqEnabled: false}
 	db := InitDB("alpaca", "password", "localhost", "alpaca_auth_test")
 	secret := "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF"
+	a.snowflakeNode = utils.InitSnowflakeNode(1)
 	a.Initialize(db, secret, 1)
 
 	code := m.Run()
@@ -86,17 +89,6 @@ func TestCreateUser(t *testing.T) {
 	Convey("Given an empty database", t, func() {
 		ClearTable()
 
-		Convey("When we create a person with an id", func() {
-			payload := []byte(`{"id": 5, "username":"kevinmchen","emailAddress":"kevin.chen.bulk@gmail.com"}`)
-			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
-			response := ExecuteRequest(req)
-
-			Convey("The response should indicate failure", func() {
-				So(response.Code, ShouldEqual, http.StatusBadRequest)
-				So(response.Body.String(), ShouldEqual, `{"error":"Do not provide an id."}`)
-			})
-		})
-
 		Convey("When we create a person without an email address", func() {
 			payload := []byte(`{"username":"kevinmchen"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
@@ -109,7 +101,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with an empty email address", func() {
-			payload := []byte(`{"username":"kevinmchen","emailAddress":""}`)
+			payload := []byte(`{"username":"kevinmchen","email_address":""}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -120,7 +112,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with a malformed email address", func() {
-			payload := []byte(`{"username":"kevinmchen","emailAddress":"kevin"}`)
+			payload := []byte(`{"username":"kevinmchen","email_address":"kevin"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -131,7 +123,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with an excessively long email address", func() {
-			payload := []byte(`{"username":"kevinmchen","emailAddress":"contact-admin-hello-webmaster-info-services-peter-crazy-but-oh-so-ubber-cool-english-alphabet-loverer-abcdefghijklmnopqrstuvwxyz@please-try-to.send-me-an-email-if-you-can-possibly-begin-to-remember-this-coz.this-is-the-longest-email-address-known-to-man-but-to-be-honest.this-is-such-a-stupidly-long-sub-domain-it-could-go-on-forever.pacraig.com"}`)
+			payload := []byte(`{"username":"kevinmchen","email_address":"contact-admin-hello-webmaster-info-services-peter-crazy-but-oh-so-ubber-cool-english-alphabet-loverer-abcdefghijklmnopqrstuvwxyz@please-try-to.send-me-an-email-if-you-can-possibly-begin-to-remember-this-coz.this-is-the-longest-email-address-known-to-man-but-to-be-honest.this-is-such-a-stupidly-long-sub-domain-it-could-go-on-forever.pacraig.com"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -142,7 +134,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with a non-null, empty username", func() {
-			payload := []byte(`{"username":"","emailAddress":"kevin.chen.bulk@gmail.com"}`)
+			payload := []byte(`{"username":"","email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -154,7 +146,7 @@ func TestCreateUser(t *testing.T) {
 
 		Convey("The response should indicate failure", func() {
 			Convey("When we submit a username with a dash", func() {
-				payload := []byte(`{"username":"kevin-chen","emailAddress":"kevin.chen.bulk@gmail.com"}`)
+				payload := []byte(`{"username":"kevin-chen","email_address":"kevin.chen.bulk@gmail.com"}`)
 				req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 				response := ExecuteRequest(req)
 				So(response.Code, ShouldEqual, http.StatusBadRequest)
@@ -163,7 +155,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with a username that is too short", func() {
-			payload := []byte(`{"username":"kev","emailAddress":"kevin.chen.bulk@gmail.com"}`)
+			payload := []byte(`{"username":"kev","email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -174,7 +166,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with a username that is too long", func() {
-			payload := []byte(`{"username":"hanakoahanakoa","emailAddress":"kevin.chen.bulk@gmail.com"}`)
+			payload := []byte(`{"username":"hanakoahanakoahanakoahanakoa","email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -185,7 +177,7 @@ func TestCreateUser(t *testing.T) {
 		})
 
 		Convey("When we create a person with the required fields", func() {
-			payload := []byte(`{"username":"kevinmchen","emailAddress":"kevin.chen.bulk@gmail.com"}`)
+			payload := []byte(`{"username":"kevinmchen","email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/person", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -203,7 +195,7 @@ func TestCreateUser(t *testing.T) {
 				So(m["primaryEmailAddressId_str"], ShouldNotEqual, 0)
 				So(m["primaryEmailAddressId_str"], ShouldNotBeEmpty)
 				So(m["username"], ShouldEqual, "kevinmchen")
-				So(m["emailAddress"], ShouldEqual, "kevin.chen.bulk@gmail.com")
+				So(m["email_address"], ShouldEqual, "kevin.chen.bulk@gmail.com")
 			})
 		})
 	})
@@ -318,8 +310,9 @@ func GetInt64(m map[string]interface{}, key string) int64 {
 }
 
 func ClearTable() {
-	a.DB.Exec("UPDATE person SET primaryEmailAddressId = NULL")
-	a.DB.Exec("UPDATE email_address SET personId = NULL")
+	a.DB.Exec("UPDATE person SET primary_email_address_id = NULL")
+	a.DB.Exec("UPDATE email_address SET person_id = NULL")
+	a.DB.Exec("UPDATE phone_number SET person_id = NULL")
 	a.DB.Exec("DELETE FROM email_address")
 	a.DB.Exec("DELETE FROM login_attempt")
 	a.DB.Exec("DELETE FROM password")
@@ -341,7 +334,7 @@ func AddUsers(count int) []int64 {
 
 	ids := []int64{}
 	for i := 1; i <= count; i++ {
-		user := &models.Person{
+		user := &services.CreatePersonRequest{
 			Username:     null.StringFrom(fmt.Sprintf("user%d", i)),
 			EmailAddress: fmt.Sprintf("user%d@gmail.com", i)}
 		b, err := json.Marshal(user)

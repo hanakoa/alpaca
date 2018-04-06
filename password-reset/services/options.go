@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"github.com/hanakoa/alpaca/password-reset/models"
-	"strconv"
+	"github.com/ttacon/libphonenumber"
 )
 
 type SendCodeRequest struct {
@@ -146,6 +146,6 @@ func isEmailAddress(s string) bool {
 }
 
 func isPhoneNumber(s string) bool {
-	_, err := strconv.Atoi(s)
+	_, err := libphonenumber.Parse(s, "US")
 	return err == nil
 }

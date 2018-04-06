@@ -22,6 +22,7 @@ CREATE TABLE phone_number (
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  confirmed boolean NOT NULL DEFAULT FALSE,
   phone_number varchar(50) NOT NULL,
   person_id bigint NOT NULL
 ) WITH (OIDS=FALSE);

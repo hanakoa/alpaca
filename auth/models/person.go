@@ -22,7 +22,6 @@ type Person struct {
 	CurrentPasswordIdStr     string      `json:"current_password_id_str"`
 	PrimaryEmailAddressID    null.Int    `json:"primary_email_address_id"`
 	PrimaryEmailAddressIdStr string      `json:"primary_email_address_id_str"`
-	EmailAddress             string      `json:"email_address"`
 }
 
 func (p *Person) GetPersonByUsername(q sqlexp.Querier) error {
@@ -36,17 +35,30 @@ func (p *Person) GetPersonByUsername(q sqlexp.Querier) error {
 				&p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID, &p.PrimaryEmailAddressID)
 }
 
-func (p *Person) GetPersonByEmailAddress(q sqlexp.Querier) error {
-	return q.QueryRowContext(
+func GetPersonByEmailAddress(q sqlexp.Querier, emailAddress string) (*Person, error) {
+	p := &Person{}
+	return p, q.QueryRowContext(
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, "+
-			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id, " +
-			"e.email_address "+
+			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id " +
 			"FROM email_address e JOIN Person p ON e.personId = p.id "+
 			"WHERE e.email_address=$1 " +
-			"AND p.deleted_timestamp IS NULL", p.EmailAddress).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
+			"AND p.deleted_timestamp IS NULL", emailAddress).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
 				&p.Disabled, &p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID,
-					&p.PrimaryEmailAddressID, &p.EmailAddress)
+					&p.PrimaryEmailAddressID)
+}
+
+func GetPersonByPhoneNumber(q sqlexp.Querier, phoneNumber string) (*Person, error) {
+	p := &Person{}
+	return p, q.QueryRowContext(
+		context.TODO(),
+		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, "+
+			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id " +
+			"FROM phone_number pn JOIN Person p ON pn.personId = p.id "+
+			"WHERE pn.phone_number=$1 " +
+			"AND p.deleted_timestamp IS NULL", phoneNumber).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
+		&p.Disabled, &p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID,
+		&p.PrimaryEmailAddressID)
 }
 
 func (p *Person) GetDeletedPerson(q sqlexp.Querier) error {

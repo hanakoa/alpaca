@@ -27,7 +27,29 @@ const (
 type PersonService struct {
 	DB     *sql.DB
 	SnowflakeNode *snowflake.Node
-	PersonSender *rabbitmq.RabbitSender
+	PersonSender rabbitmq.Sender
+}
+
+type CreatePersonRequest struct {
+	EmailAddress string      `json:"email_address"`
+	Username     null.String `json:"username"`
+}
+
+type LogSender struct {
+}
+
+func (l LogSender) Send(i interface{}) {
+	log.Println("Sending message: " + i.(string))
+}
+
+func NewPersonService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled bool) PersonService {
+	svc := PersonService{DB: db, SnowflakeNode: snowflakeNode, PersonSender: nil}
+	if rabbitmqEnabled {
+		svc.PersonSender = rabbitmq.NewRabbitSender("alpaca-auth-exchange", "person.#")
+	} else {
+		svc.PersonSender = LogSender{}
+	}
+	return svc
 }
 
 // TODO only admins can call this endpoint
@@ -84,9 +106,10 @@ func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
 
 // TODO only admins can create
 func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
-	var p models.Person
+	p := &models.Person{}
+	var req CreatePersonRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&req); err != nil {
 		log.Println("Invalid request payload")
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -96,28 +119,25 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	p.Created = null.TimeFrom(now)
 	p.LastModified = null.TimeFrom(now)
-
-	if p.Id != 0 {
-		log.Println("Do not provide an id.")
-		utils.RespondWithError(w, http.StatusBadRequest, "Do not provide an id.")
-		return
+	if req.Username.Valid {
+		req.Username = null.StringFrom(strings.TrimSpace(req.Username.String))
 	}
+	p.Username = req.Username
 
-	if strings.TrimSpace(p.EmailAddress) == "" {
+	req.EmailAddress = strings.TrimSpace(req.EmailAddress)
+	if req.EmailAddress == "" {
 		log.Println("Must supply email address.")
 		utils.RespondWithError(w, http.StatusBadRequest, "Must supply email address.")
 		return
 	}
 
-	p.EmailAddress = strings.TrimSpace(p.EmailAddress)
-
-	if len(p.EmailAddress) > 255 {
+	if len(req.EmailAddress) > 255 {
 		log.Println("Email address cannot exceed 255 chars.")
 		utils.RespondWithError(w, http.StatusBadRequest, "Email address cannot exceed 255 chars.")
 		return
 	}
 
-	if err := checkmail.ValidateFormat(p.EmailAddress); err != nil {
+	if err := checkmail.ValidateFormat(req.EmailAddress); err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Email address has invalid format.")
 		return
 	}
@@ -157,7 +177,7 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emailAddressId := utils.NewPrimaryKey(svc.SnowflakeNode)
-	emailAddress := &models.EmailAddress{Id: emailAddressId, Primary: true, EmailAddress: p.EmailAddress, PersonId: p.Id}
+	emailAddress := &models.EmailAddress{ID: emailAddressId, Primary: true, EmailAddress: req.EmailAddress, PersonID: p.Id}
 	if err := emailAddress.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
@@ -165,7 +185,7 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Created email address %d for person %d\n", emailAddress.Id, p.Id)
+	log.Printf("Created email address %d for person %d\n", emailAddress.ID, p.Id)
 
 	p.PrimaryEmailAddressID = null.IntFrom(emailAddressId)
 	if err := p.UpdatePerson(tx); err != nil {
@@ -180,8 +200,8 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		setStringsForPerson(&p)
-		svc.PersonSender.Send("created person")
+		setStringsForPerson(p)
+		rabbitmq.Send(svc.PersonSender, "created person")
 		utils.RespondWithJSON(w, http.StatusCreated, p)
 	}
 }

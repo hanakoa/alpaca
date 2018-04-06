@@ -41,8 +41,8 @@ func (service *GrpcServer) GetPerson(ctx context.Context, in *pb.GetPersonReques
 	if err := e.GetEmailAddressByEmailAddress(service.DB); err != nil {
 		return &pb.GetPersonResponse{PersonId: 0}, err
 	} else {
-		log.Printf("Found personId: %d", e.PersonId)
-		return &pb.GetPersonResponse{PersonId: e.PersonId}, nil
+		log.Printf("Found personId: %d", e.PersonID)
+		return &pb.GetPersonResponse{PersonId: e.PersonID}, nil
 	}
 }
 

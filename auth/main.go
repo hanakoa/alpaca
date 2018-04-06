@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/hanakoa/alpaca/auth/models"
-	"github.com/hanakoa/alpaca/auth/services"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
 	"github.com/kevinmichaelchen/my-go-utils"
 	"log"
@@ -17,6 +16,7 @@ func main() {
 	user := utils.EnvOrString("DB_USER", "alpaca")
 	pass := utils.MustEnv("DB_PASSWORD")
 	host := utils.MustEnv("DB_HOST")
+	rabbitmqEnabled := utils.EnvOrBool("RABBITMQ_ENABLED", false)
 	dbName := utils.EnvOrString("DB_DATABASE", "alpaca_auth")
 	secret := utils.MustEnv("ALPACA_SECRET")
 	origin := utils.MustEnv("ORIGIN_ALLOWED")
@@ -37,22 +37,17 @@ func main() {
 	snowflakeNode := utils.InitSnowflakeNode(snowflakeNodeNumber)
 	// TODO configurable duration?
 	iterationCount := models.CalibrateIterationCount(time.Millisecond * 1000)
-	passwordService := services.PasswordService{
-		DB:             db,
-		SnowflakeNode:  snowflakeNode,
-		IterationCount: iterationCount}
 
-	a := App{}
+	a := App{RabbitmqEnabled: rabbitmqEnabled, iterationCount: iterationCount}
 	a.mfaClient = mfaGRPC.NewMFAClient(grpcMFAHost, grpcMFAPort)
 	a.snowflakeNode = snowflakeNode
 	a.Initialize(db, secret, maxWorkers)
-	a.passwordService = passwordService
 	log.Printf("Running on port %d...\n", port)
 	wg.Add(1)
 	go a.ServeRest(fmt.Sprintf(":%d", port), origin)
 
 	wg.Add(1)
-	grpcServer := &grpc.GrpcServer{Port: grpcPort, DB: db, PasswordService: passwordService}
+	grpcServer := &grpc.GrpcServer{Port: grpcPort, DB: db, PasswordService: a.passwordService}
 	go grpcServer.Run()
 
 	wg.Wait()

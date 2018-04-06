@@ -21,13 +21,21 @@ import (
 type EmailAddressService struct {
 	DB     *sql.DB
 	SnowflakeNode *snowflake.Node
-	EmailAddressSender *rabbitmq.RabbitSender
+	EmailAddressSender rabbitmq.Sender
+}
+
+func NewEmailAddressService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled bool) EmailAddressService {
+	svc := EmailAddressService{DB: db, SnowflakeNode: snowflakeNode, EmailAddressSender: nil}
+	if rabbitmqEnabled {
+		svc.EmailAddressSender = rabbitmq.NewRabbitSender("alpaca-auth-exchange", "emailAddress.#")
+	}
+	return svc
 }
 
 func setStringsForEmailAddress(e *models.EmailAddress) {
-	e.IdStr = strconv.FormatInt(e.Id, 10)
+	e.IdStr = strconv.FormatInt(e.ID, 10)
 	// TODO PrimaryEmailAddressID should not be nullable
-	e.PersonIdStr = strconv.FormatInt(e.PersonId, 10)
+	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 }
 
 // TODO only admins can call this endpoint
@@ -49,7 +57,7 @@ func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http
 			data[i] = e
 		}
 
-		lastId := emailAddresses[len(emailAddresses) - 1].Id
+		lastId := emailAddresses[len(emailAddresses) - 1].ID
 		response = makePage(count, data, cursor, lastId)
 	} else {
 		response = emptyPage()
@@ -66,7 +74,7 @@ func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.R
 
 	svc.EmailAddressSender.Send("getting email address...")
 	log.Printf("Looking up email address: %d\n", id)
-	e := models.EmailAddress{Id: id}
+	e := models.EmailAddress{ID: id}
 	if err := e.GetEmailAddress(svc.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -94,7 +102,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 	e.Created = null.TimeFrom(now)
 	e.LastModified = null.TimeFrom(now)
 
-	if e.Id != 0 {
+	if e.ID != 0 {
 		utils.RespondWithError(w, http.StatusBadRequest, "Do not provide an id.")
 		return
 	}
@@ -123,7 +131,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if e.PersonId == 0 {
+	if e.PersonID == 0 {
 		utils.RespondWithError(w, http.StatusBadRequest, "Email address must have personId.")
 		return
 	}
@@ -138,20 +146,20 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 
-	p := &models.Person{Id: e.PersonId}
+	p := &models.Person{Id: e.PersonID}
 	if exists, err := p.Exists(tx); err != nil {
 		tx.Rollback()
 		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if !exists {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for personId: %d", e.PersonId))
+		utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for personId: %d", e.PersonID))
 		return
 	}
 
-	e.Id = utils.NewPrimaryKey(svc.SnowflakeNode)
-	e.IdStr = strconv.FormatInt(e.Id, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonId, 10)
+	e.ID = utils.NewPrimaryKey(svc.SnowflakeNode)
+	e.IdStr = strconv.FormatInt(e.ID, 10)
+	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 	if err := e.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
@@ -183,7 +191,7 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 	defer r.Body.Close()
-	e.Id = id
+	e.ID = id
 
 	var tx *sql.Tx
 	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
@@ -212,8 +220,8 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 
-	e.IdStr = strconv.FormatInt(e.Id, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonId, 10)
+	e.IdStr = strconv.FormatInt(e.ID, 10)
+	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 
 	if err := tx.Commit(); err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -239,7 +247,7 @@ func (svc *EmailAddressService) DeleteEmailAddress(w http.ResponseWriter, r *htt
 	}
 
 	// TODO you can only delete your own email address, unless you're an admin
-	e := models.EmailAddress{Id: id, Deleted: null.TimeFrom(time.Now())}
+	e := models.EmailAddress{ID: id, Deleted: null.TimeFrom(time.Now())}
 
 	if exists, err := e.Exists(tx); err != nil {
 		tx.Rollback()
@@ -274,8 +282,8 @@ func (svc *EmailAddressService) DeleteEmailAddress(w http.ResponseWriter, r *htt
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	e.IdStr = strconv.FormatInt(e.Id, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonId, 10)
+	e.IdStr = strconv.FormatInt(e.ID, 10)
+	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 
 	if err := tx.Commit(); err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
