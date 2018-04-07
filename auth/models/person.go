@@ -66,7 +66,7 @@ func (p *Person) GetDeletedPerson(q sqlexp.Querier) error {
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, " +
 			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id "+
-			"FROM Person p"+
+			"FROM Person p "+
 			"WHERE p.id=$1 "+
 			"AND p.deleted_timestamp IS NOT NULL", p.Id).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
 				&p.Disabled, &p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID,
