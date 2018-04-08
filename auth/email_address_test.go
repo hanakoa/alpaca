@@ -30,8 +30,8 @@ func TestGetEmailAddresses(t *testing.T) {
 			ids := AddUsers(20)
 
 			Convey("The response should be", func() {
-				log.Println("First ID is", ids[0])
-				endpoint := fmt.Sprintf("/emailaddress?count=3&cursor=%d", ids[0])
+				log.Println("First ID is", ids[0].PrimaryEmailAddressID.Int64)
+				endpoint := fmt.Sprintf("/emailaddress?count=3&cursor=%d", ids[0].PrimaryEmailAddressID.Int64)
 				req, _ := http.NewRequest("GET", endpoint, nil)
 				response := ExecuteRequest(req)
 				log.Println(response)
@@ -131,7 +131,7 @@ func TestCreateEmailAddress(t *testing.T) {
 
 		Convey("When we create an email address with the required fields", func() {
 			ids := AddUsers(1)
-			personIDString := strconv.FormatInt(ids[0], 10)
+			personIDString := strconv.FormatInt(ids[0].Id, 10)
 			payload := []byte(`{"person_id":` + personIDString + `,"email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
@@ -162,7 +162,8 @@ func TestGetEmailAddress(t *testing.T) {
 			ids := AddUsers(1)
 
 			Convey("The response should be successful", func() {
-				req, _ := http.NewRequest("GET", fmt.Sprintf("/emailaddress/%d", ids[0]), nil)
+				// TODO using person ID instead of email ID
+				req, _ := http.NewRequest("GET", fmt.Sprintf("/emailaddress/%d", ids[0].PrimaryEmailAddressID.Int64), nil)
 				response := ExecuteRequest(req)
 				So(response.Code, ShouldEqual, http.StatusOK)
 			})
@@ -188,7 +189,7 @@ func TestUpdateEmailAddress(t *testing.T) {
 		Convey("When we update an email address", func() {
 			ids := AddUsers(1)
 
-			personID := ids[0]
+			personID := ids[0].Id
 			req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", personID), nil)
 			response := ExecuteRequest(req)
 			var m map[string]interface{}
@@ -233,7 +234,7 @@ func TestDeleteEmailAddress(t *testing.T) {
 		ClearTable()
 		ids := AddUsers(1)
 
-		personID := ids[0]
+		personID := ids[0].Id
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", personID), nil)
 		response := ExecuteRequest(req)
 		log.Println("GOT RESPONSE =", response.Body)

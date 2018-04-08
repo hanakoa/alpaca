@@ -39,8 +39,8 @@ func TestGetUsers(t *testing.T) {
 			ids := AddUsers(20)
 
 			Convey("The response should be", func() {
-				log.Println("First ID is", ids[0])
-				endpoint := fmt.Sprintf("/person?count=3&cursor=%d", ids[0])
+				log.Println("First ID is", ids[0].Id)
+				endpoint := fmt.Sprintf("/person?count=3&cursor=%d", ids[0].Id)
 				req, _ := http.NewRequest("GET", endpoint, nil)
 				response := ExecuteRequest(req)
 				log.Println(response)
@@ -208,14 +208,14 @@ func TestGetUser(t *testing.T) {
 			ids := AddUsers(1)
 
 			Convey("The response should be", func() {
-				req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", ids[0]), nil)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", ids[0].Id), nil)
 				response := ExecuteRequest(req)
 				So(response.Code, ShouldEqual, http.StatusOK)
 
 				var m map[string]interface{}
 				json.Unmarshal(response.Body.Bytes(), &m)
 
-				So(GetInt64(m, "id_str"), ShouldEqual, ids[0])
+				So(GetInt64(m, "id_str"), ShouldEqual, ids[0].Id)
 				So(m["primary_email_address_id_str"], ShouldNotEqual, "0")
 				So(m["primary_email_address_id_str"], ShouldNotEqual, 0)
 				So(m["primary_email_address_id_str"], ShouldNotBeEmpty)
@@ -230,7 +230,7 @@ func TestUpdateUser(t *testing.T) {
 
 		Convey("When we update a person", func() {
 			ids := AddUsers(1)
-			endpoint := fmt.Sprintf("/person/%d", ids[0])
+			endpoint := fmt.Sprintf("/person/%d", ids[0].Id)
 
 			req, _ := http.NewRequest("GET", endpoint, nil)
 			response := ExecuteRequest(req)
@@ -264,7 +264,7 @@ func TestUpdateUser(t *testing.T) {
 				json.Unmarshal(response.Body.Bytes(), &m)
 
 				So(m["id"], ShouldEqual, originalUser["id"])
-				So(GetInt64(m, "id_str"), ShouldEqual, ids[0])
+				So(GetInt64(m, "id_str"), ShouldEqual, ids[0].Id)
 				So(m["username"], ShouldEqual, "hodor")
 				So(m["username"], ShouldNotEqual, originalUser["username"])
 				So(m["primary_email_address_id_str"], ShouldNotEqual, "0")
@@ -279,7 +279,7 @@ func TestDeleteUser(t *testing.T) {
 	Convey("Given a person", t, func() {
 		ClearTable()
 		ids := AddUsers(1)
-		endpoint := fmt.Sprintf("/person/%d", ids[0])
+		endpoint := fmt.Sprintf("/person/%d", ids[0].Id)
 
 		req, _ := http.NewRequest("GET", endpoint, nil)
 		response := ExecuteRequest(req)
@@ -326,12 +326,12 @@ func ExecuteRequest(req *http.Request) *httptest.ResponseRecorder {
 	return rr
 }
 
-func AddUsers(count int) []int64 {
+func AddUsers(count int) []models.Person {
 	if count < 1 {
 		count = 1
 	}
 
-	ids := []int64{}
+	users := []models.Person{}
 	for i := 1; i <= count; i++ {
 		user := &services.CreatePersonRequest{
 			Username:     null.StringFrom(fmt.Sprintf("user%d", i)),
@@ -352,11 +352,9 @@ func AddUsers(count int) []int64 {
 			panic(err)
 		}
 		if p.Id == 0 {
-			log.Println("RESPONSE =", res.Body)
 			panic(fmt.Errorf("POST /person failed: %s", res.Body))
 		}
-		log.Printf("Created user with id: %d\n", p.Id)
-		ids = append(ids, p.Id)
+		users = append(users, p)
 	}
-	return ids
+	return users
 }
