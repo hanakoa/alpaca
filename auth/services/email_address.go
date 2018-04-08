@@ -28,6 +28,8 @@ func NewEmailAddressService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqE
 	svc := EmailAddressService{DB: db, SnowflakeNode: snowflakeNode, EmailAddressSender: nil}
 	if rabbitmqEnabled {
 		svc.EmailAddressSender = rabbitmq.NewRabbitSender("alpaca-auth-exchange", "emailAddress.#")
+	} else {
+		svc.EmailAddressSender = LogSender{}
 	}
 	return svc
 }
