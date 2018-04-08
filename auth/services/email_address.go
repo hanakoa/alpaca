@@ -74,7 +74,7 @@ func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	svc.EmailAddressSender.Send("getting email address...")
+	rabbitmq.Send(svc.EmailAddressSender, "Getting email address...")
 	log.Printf("Looking up email address: %d\n", id)
 	e := models.EmailAddress{ID: id}
 	if err := e.GetEmailAddress(svc.DB); err != nil {
@@ -90,7 +90,7 @@ func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.R
 	utils.RespondWithJSON(w, http.StatusOK, e)
 }
 
-// TODO only admins can create, unless personId is you
+// TODO only admins can create, unless person is you
 func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *http.Request) {
 	var e models.EmailAddress
 	decoder := json.NewDecoder(r.Body)
@@ -134,7 +134,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 	}
 
 	if e.PersonID == 0 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address must have personId.")
+		utils.RespondWithError(w, http.StatusBadRequest, "Email address must have person ID.")
 		return
 	}
 
@@ -155,7 +155,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	} else if !exists {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for personId: %d", e.PersonID))
+		utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for person ID: %d", e.PersonID))
 		return
 	}
 
@@ -174,7 +174,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	} else {
 		// TODO publish RabbitMQ message for email confirmation code
-		svc.EmailAddressSender.Send("created email address")
+		rabbitmq.Send(svc.EmailAddressSender, "Created email address...")
 		utils.RespondWithJSON(w, http.StatusCreated, e)
 	}
 }

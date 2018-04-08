@@ -77,7 +77,7 @@ func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
 		response = emptyPage()
 	}
 	utils.RespondWithJSON(w, http.StatusOK, response)
-	svc.PersonSender.Send("Getting people")
+	rabbitmq.Send(svc.PersonSender, "Getting people...")
 }
 
 func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc.PersonSender.Send("getting person...")
+	rabbitmq.Send(svc.PersonSender, "getting person...")
 	setStringsForPerson(&p)
 	utils.RespondWithJSON(w, http.StatusOK, p)
 }
@@ -259,7 +259,7 @@ func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		setStringsForPerson(&p)
-		svc.PersonSender.Send("updated person")
+		rabbitmq.Send(svc.PersonSender, "updated person")
 		utils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
@@ -295,7 +295,7 @@ func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
 		setStringsForPerson(&p)
-		svc.PersonSender.Send("deleted person")
+		rabbitmq.Send(svc.PersonSender, "deleted person")
 		utils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
