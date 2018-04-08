@@ -1,19 +1,20 @@
 package main
 
 import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"github.com/hanakoa/alpaca/password-reset/services"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"database/sql"
-	"encoding/json"
-	"bytes"
-	"github.com/hanakoa/alpaca/password-reset/services"
 )
 
 var a App
 var db *sql.DB
+
 func TestMain(m *testing.M) {
 	a = App{}
 

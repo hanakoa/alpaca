@@ -1,12 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	authGRPC "github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/kevinmichaelchen/my-go-utils"
 	"log"
 	"sync"
-	"database/sql"
 	"time"
 )
 

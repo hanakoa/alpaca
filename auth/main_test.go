@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hanakoa/alpaca/auth/models"
+	"github.com/hanakoa/alpaca/auth/services"
 	"github.com/kevinmichaelchen/my-go-utils"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/guregu/null.v3"
@@ -13,7 +14,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"github.com/hanakoa/alpaca/auth/services"
 )
 
 var a App
