@@ -36,8 +36,8 @@ The frontend uses:
 [Why does this project exist?](./docs/differences.md)
 
 ## Getting started
-[Running locally](./docs/running-locally.md) is discouraged.
-You should instead run with Docker.
+[Run locally](./docs/running-locally.md).
+Or run with Docker.
 
 To build images and spin them up, run
 ```bash
