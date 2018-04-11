@@ -4,6 +4,7 @@ import (
 	"testing"
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
+	"encoding/hex"
 )
 
 func TestHash(t *testing.T) {
@@ -12,6 +13,9 @@ func TestHash(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Println("Salt is", hex.EncodeToString(salt))
+		hash := GenerateHash("potato-tomato-cherry-gun", 1, salt)
+		log.Println("Hash is", hex.EncodeToString(hash))
 		//salt, _ = hex.DecodeString("99d1745e8fe4f96130c638d733de489c4eb9fad026bb2540a414c113e5a1fe9b")
 
 		tests := []struct{

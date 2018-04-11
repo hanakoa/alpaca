@@ -1,0 +1,32 @@
+package main
+
+import (
+	"bytes"
+	"fmt"
+	. "github.com/smartystreets/goconvey/convey"
+	"net/http"
+	"testing"
+)
+
+func TestLogin(t *testing.T) {
+	ClearTable()
+
+	Convey("Given a user with an email, username, and password", t, func() {
+
+		users := AddUsers(1)
+
+		payload := []byte(`{"password":"potato-tomato-cherry-gun"}`)
+		req, err := http.NewRequest("PUT", fmt.Sprintf("/person/%d/password", users[0].Id), bytes.NewBuffer(payload))
+		So(err, ShouldBeNil)
+		response := ExecuteRequest(req)
+		So(response.Code, ShouldEqual, http.StatusOK)
+
+		Convey("Should return authenticated", func() {
+			payload := []byte(`{"login":"user1","password":"potato-tomato-cherry-gun"}`)
+			req, err := http.NewRequest("POST", "/token", bytes.NewBuffer(payload))
+			So(err, ShouldBeNil)
+			response := ExecuteRequest(req)
+			So(response.Code, ShouldEqual, http.StatusOK)
+		})
+	})
+}
