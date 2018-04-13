@@ -11,6 +11,7 @@
 </figure> 
 </p>
 
+## Intro
 Alpaca is a WIP microservices system that handles authentication and authorization.
 
 It provides:
@@ -20,6 +21,7 @@ It provides:
 - email confirmation codes
 - phone number confirmation codes
 
+## Stack
 This project is built on Golang microservices,
 which communicate via [gRPC](https://grpc.io/)
 and [RabbitMQ](https://www.rabbitmq.com/).
@@ -47,4 +49,10 @@ make docker
 To bring it all down, run
 ```bash
 make docker-stop
+```
+
+## Testing
+```
+go get github.com/smartystreets/goconvey
+$GOPATH/bin/goconvey
 ```
