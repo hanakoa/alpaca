@@ -152,18 +152,23 @@ install-proto:
 #####################
 ## CLUSTER METHODS ##
 #####################
+.PHONY: start-cluster
 start-cluster:
 	minikube start --memory 2048 --cpus 2 --vm-driver=hyperkit
 
+.PHONY: stop-cluster
 stop-cluster:
 	minikube stop
 
+.PHONY: upgrade-minikube
 upgrade-minikube:
 	@$(MAKE) stop-cluster
 	brew cask reinstall minikube
 
+.PHONY: kb-create
 kb-create:
 	kubectl create -f ./kube/
 
+.PHONY: kb-delete
 kb-delete:
 	@kubectl delete svc,deploy --selector="app=alpaca-auth"
