@@ -39,7 +39,8 @@ The frontend uses:
 
 ## Getting started
 [Run locally](./docs/running-locally.md).
-Or run with Docker.
+
+### Run with Docker
 
 To build images and spin them up, run
 ```bash
@@ -49,6 +50,25 @@ make docker
 To bring it all down, run
 ```bash
 make docker-stop
+```
+
+### Run with minikube
+#### Building images
+```bash
+eval $(minikube docker-env)
+docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
+```
+
+#### Running services
+```bash
+# spin up services
+make kb-create
+
+# view logs
+kubectl logs $(kubectl get po -l app=alpaca-auth,tier=api -o jsonpath="{.items[0].metadata.name}") -f
+
+# delete services
+make kb-delete
 ```
 
 ## Testing
