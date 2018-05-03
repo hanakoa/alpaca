@@ -56,7 +56,7 @@ docker:
 
 .PHONY: docker-build
 docker-build:
-	docker image build -t hanakoa/alpaca-auth-api:latest -f auth/Dockerfile .
+	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
 	docker image build -t hanakoa/alpaca-mfa-api:latest -f mfa/Dockerfile .
 	docker image build -t hanakoa/alpaca-password-reset-api:latest -f password-reset/Dockerfile .
 	docker-compose build
