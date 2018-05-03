@@ -4,6 +4,7 @@ metadata:
   name: alpaca-auth-api
   labels:
     app: alpaca-auth
+    tier: api
 spec:
   ports:
     - port: 8080
@@ -21,6 +22,10 @@ metadata:
     app: alpaca-auth
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: alpaca-auth
+      tier: api
   template:
     metadata:
       labels:
@@ -58,6 +63,7 @@ metadata:
   name: alpaca-auth-db
   labels:
     app: alpaca-auth
+    tier: db
 spec:
   ports:
     - port: 5672
@@ -72,7 +78,12 @@ metadata:
   name: alpaca-auth-db
   labels:
     app: alpaca-auth
+    tier: db
 spec:
+  selector:
+    matchLabels:
+      app: alpaca-auth
+      tier: db
   strategy:
     type: Recreate
   template:
