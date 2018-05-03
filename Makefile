@@ -147,3 +147,23 @@ create-user:
 .PHONY: install-proto
 install-proto:
 	go get -u github.com/golang/protobuf/protoc-gen-go
+
+
+#####################
+## CLUSTER METHODS ##
+#####################
+start-cluster:
+	minikube start --memory 2048 --cpus 2 --vm-driver=hyperkit
+
+stop-cluster:
+	minikube stop
+
+upgrade-minikube:
+	@$(MAKE) stop-cluster
+	brew cask reinstall minikube
+
+kb-create:
+	kubectl create -f ./kube/
+
+kb-delete:
+	@kubectl delete svc,deploy --selector="app=alpaca-auth"
