@@ -57,15 +57,15 @@ docker:
 .PHONY: docker-build
 docker-build:
 	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
-	docker image build -t hanakoa/alpaca-mfa-api:latest -f mfa/Dockerfile .
-	docker image build -t hanakoa/alpaca-password-reset-api:latest -f password-reset/Dockerfile .
+	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile .
+	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile .
 	docker-compose build
 
 .PHONY: docker-rebuild
 docker-rebuild:
-	docker image build -t hanakoa/alpaca-auth-api:latest -f auth/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-mfa-api:latest -f mfa/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-password-reset-api:latest -f password-reset/Dockerfile . --no-cache
+	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile . --no-cache
+	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile . --no-cache
+	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile . --no-cache
 	docker-compose build
 
 .PHONY: docker-remove
@@ -102,9 +102,9 @@ test-seed:
 
 minikube-build:
 	@eval $$(minikube docker-env) ;\
-	docker image build -t hanakoa/alpaca-auth-api:latest -f auth/Dockerfile .
-	docker image build -t hanakoa/alpaca-password-reset-api:latest -f password-reset/Dockerfile .
-	docker image build -t hanakoa/alpaca-ui -f ui/Dockerfile .
+	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
+#	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile .
+#	docker image build -t hanakoa/alpaca-ui -f ui/Dockerfile .
 
 .PHONY: protoc
 protoc:
@@ -152,17 +152,17 @@ install-proto:
 #####################
 ## CLUSTER METHODS ##
 #####################
-.PHONY: start-cluster
-start-cluster:
+.PHONY: mk-start
+mk-start:
 	minikube start --memory 2048 --cpus 2 --vm-driver=hyperkit
 
-.PHONY: stop-cluster
-stop-cluster:
+.PHONY: mk-stop
+mk-stop:
 	minikube stop
 
-.PHONY: upgrade-minikube
-upgrade-minikube:
-	@$(MAKE) stop-cluster
+.PHONY: mk-upgrade
+mk-upgrade:
+	@$(MAKE) mk-stop
 	brew cask reinstall minikube
 
 .PHONY: kb-create
