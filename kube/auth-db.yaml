@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alpaca-auth-db
+  labels:
+    app: alpaca-auth
+    tier: db
+spec:
+  ports:
+    - port: 5672
+  selector:
+    app: alpaca-auth
+    tier: db
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpaca-auth-db
+  labels:
+    app: alpaca-auth
+    tier: db
+spec:
+  selector:
+    matchLabels:
+      app: alpaca-auth
+      tier: db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: alpaca-auth
+        tier: db
+    spec:
+      containers:
+      - image: postgres:10.1-alpine
+        name: alpaca-auth-db
+        env:
+        - name: POSTGRES_DB
+          value: alpaca_auth
+        - name: POSTGRES_USER
+          value: alpaca
+        - name: POSTGRES_PASSWORD
+          value: password
+        ports:
+        - containerPort: 5672
+          name: postgres
