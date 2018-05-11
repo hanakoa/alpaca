@@ -54,9 +54,9 @@ func NewPersonService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled
 
 // TODO only admins can call this endpoint
 func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
-	count := getCount(r)
-	cursor := getCursor(r)
-	sort := getSort(r)
+	count := utils.GetCount(r)
+	cursor := utils.GetCursor(r)
+	sort := utils.GetSort(r)
 
 	people, err := models.GetPersons(svc.DB, cursor, sort, count)
 	if err != nil {
@@ -72,9 +72,9 @@ func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
 		}
 
 		lastId := people[len(people)-1].Id
-		response = makePage(count, data, cursor, lastId)
+		response = utils.MakePage(count, data, cursor, lastId)
 	} else {
-		response = emptyPage()
+		response = utils.EmptyPage()
 	}
 	utils.RespondWithJSON(w, http.StatusOK, response)
 	rabbitmq.Send(svc.PersonSender, "Getting people...")

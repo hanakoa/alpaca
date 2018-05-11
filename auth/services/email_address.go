@@ -42,9 +42,9 @@ func setStringsForEmailAddress(e *models.EmailAddress) {
 
 // TODO only admins can call this endpoint
 func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http.Request) {
-	count := getCount(r)
-	cursor := getCursor(r)
-	sort := getSort(r)
+	count := utils.GetCount(r)
+	cursor := utils.GetCursor(r)
+	sort := utils.GetSort(r)
 
 	emailAddresses, err := models.GetEmailAddresses(svc.DB, cursor, sort, count)
 	if err != nil {
@@ -60,9 +60,9 @@ func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http
 		}
 
 		lastId := emailAddresses[len(emailAddresses) - 1].ID
-		response = makePage(count, data, cursor, lastId)
+		response = utils.MakePage(count, data, cursor, lastId)
 	} else {
-		response = emptyPage()
+		response = utils.EmptyPage()
 	}
 	utils.RespondWithJSON(w, http.StatusOK, response)
 }
