@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/hanakoa/alpaca/auth/models"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
@@ -10,7 +11,6 @@ import (
 	"log"
 	"sync"
 	"time"
-	"github.com/TeslaGov/envy"
 )
 
 func main() {

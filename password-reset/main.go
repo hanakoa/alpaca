@@ -3,12 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/TeslaGov/envy"
 	authGRPC "github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/kevinmichaelchen/my-go-utils"
 	"log"
 	"sync"
 	"time"
-	"github.com/TeslaGov/envy"
 )
 
 func main() {
