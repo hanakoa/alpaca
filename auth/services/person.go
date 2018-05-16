@@ -17,6 +17,7 @@ import (
 	"github.com/kevinmichaelchen/my-go-utils/rabbitmq"
 	"github.com/badoux/checkmail"
 	"regexp"
+	"github.com/TeslaGov/cursor"
 )
 
 const (
@@ -54,11 +55,11 @@ func NewPersonService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled
 
 // TODO only admins can call this endpoint
 func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
-	count := utils.GetCount(r)
-	cursor := utils.GetCursor(r)
-	sort := utils.GetSort(r)
+	count := cursor.GetCount(r, DefaultPageSize, MaxPageSize)
+	c := cursor.GetCursor(r)
+	sort := cursor.GetSort(r)
 
-	people, err := models.GetPersons(svc.DB, cursor, sort, count)
+	people, err := models.GetPersons(svc.DB, int64(c), sort, count)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -72,9 +73,9 @@ func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
 		}
 
 		lastId := people[len(people)-1].Id
-		response = utils.MakePage(count, data, cursor, lastId)
+		response = cursor.MakePage(count, data, c, int(lastId))
 	} else {
-		response = utils.EmptyPage()
+		response = cursor.EmptyPage()
 	}
 	utils.RespondWithJSON(w, http.StatusOK, response)
 	rabbitmq.Send(svc.PersonSender, "Getting people...")

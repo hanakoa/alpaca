@@ -16,6 +16,13 @@ import (
 	"github.com/kevinmichaelchen/my-go-utils/rabbitmq"
 	"net/http"
 	"github.com/badoux/checkmail"
+	"github.com/TeslaGov/cursor"
+)
+
+const (
+	//200
+	DefaultPageSize = 5
+	MaxPageSize     = 1000
 )
 
 type EmailAddressService struct {
@@ -42,11 +49,11 @@ func setStringsForEmailAddress(e *models.EmailAddress) {
 
 // TODO only admins can call this endpoint
 func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http.Request) {
-	count := utils.GetCount(r)
-	cursor := utils.GetCursor(r)
-	sort := utils.GetSort(r)
+	count := cursor.GetCount(r, DefaultPageSize, MaxPageSize)
+	c := cursor.GetCursor(r)
+	sort := cursor.GetSort(r)
 
-	emailAddresses, err := models.GetEmailAddresses(svc.DB, cursor, sort, count)
+	emailAddresses, err := models.GetEmailAddresses(svc.DB, int64(c), sort, count)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -60,9 +67,9 @@ func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http
 		}
 
 		lastId := emailAddresses[len(emailAddresses) - 1].ID
-		response = utils.MakePage(count, data, cursor, lastId)
+		response = cursor.MakePage(count, data, int(c), int(lastId))
 	} else {
-		response = utils.EmptyPage()
+		response = cursor.EmptyPage()
 	}
 	utils.RespondWithJSON(w, http.StatusOK, response)
 }
