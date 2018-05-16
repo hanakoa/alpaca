@@ -10,21 +10,22 @@ import (
 	"log"
 	"sync"
 	"time"
+	"github.com/TeslaGov/envy"
 )
 
 func main() {
-	user := utils.EnvOrString("DB_USER", "alpaca")
-	pass := utils.MustEnv("DB_PASSWORD")
-	host := utils.MustEnv("DB_HOST")
-	rabbitmqEnabled := utils.EnvOrBool("RABBITMQ_ENABLED", false)
-	dbName := utils.EnvOrString("DB_DATABASE", "alpaca_auth")
-	secret := utils.MustEnv("ALPACA_SECRET")
-	origin := utils.MustEnv("ORIGIN_ALLOWED")
-	port := utils.EnvOrInt("APP_PORT", 8080)
-	maxWorkers := utils.EnvOrInt("MAX_WORKERS", 1)
-	grpcPort := utils.EnvOrInt("GRPC_PORT", 50051)
-	grpcMFAHost := utils.EnvOrString("GRPC_MFA_API_HOST", "localhost")
-	grpcMFAPort := utils.EnvOrInt("GRPC_MFA_API_PORT", 50052)
+	user := envy.EnvOrString("DB_USER", "alpaca")
+	pass := envy.MustEnv("DB_PASSWORD")
+	host := envy.MustEnv("DB_HOST")
+	rabbitmqEnabled := envy.EnvOrBool("RABBITMQ_ENABLED", false)
+	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_auth")
+	secret := envy.MustEnv("ALPACA_SECRET")
+	origin := envy.MustEnv("ORIGIN_ALLOWED")
+	port := envy.EnvOrInt("APP_PORT", 8080)
+	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
+	grpcPort := envy.EnvOrInt("GRPC_PORT", 50051)
+	grpcMFAHost := envy.EnvOrString("GRPC_MFA_API_HOST", "localhost")
+	grpcMFAPort := envy.EnvOrInt("GRPC_MFA_API_PORT", 50052)
 
 	//snowFlakeNodeNumber := utils.StringToInt64(utils.MustEnv("SNOWFLAKE_NODE_NUMBER"))
 	// TODO node number should come from env var

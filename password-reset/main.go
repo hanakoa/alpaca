@@ -8,21 +8,22 @@ import (
 	"log"
 	"sync"
 	"time"
+	"github.com/TeslaGov/envy"
 )
 
 func main() {
 	a := App{}
 
-	user := utils.EnvOrString("DB_USER", "alpaca")
-	pass := utils.MustEnv("DB_PASSWORD")
-	host := utils.MustEnv("DB_HOST")
-	dbName := utils.EnvOrString("DB_DATABASE", "alpaca_password_reset")
-	origin := utils.MustEnv("ORIGIN_ALLOWED")
-	port := utils.EnvOrInt("APP_PORT", 8081)
-	maxWorkers := utils.EnvOrInt("MAX_WORKERS", 1)
+	user := envy.EnvOrString("DB_USER", "alpaca")
+	pass := envy.MustEnv("DB_PASSWORD")
+	host := envy.MustEnv("DB_HOST")
+	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_password_reset")
+	origin := envy.MustEnv("ORIGIN_ALLOWED")
+	port := envy.EnvOrInt("APP_PORT", 8081)
+	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
 
-	grpcAuthHost := utils.EnvOrString("GRPC_AUTH_API_HOST", "localhost")
-	grpcAuthPort := utils.EnvOrInt("GRPC_AUTH_API_PORT", 50051)
+	grpcAuthHost := envy.EnvOrString("GRPC_AUTH_API_HOST", "localhost")
+	grpcAuthPort := envy.EnvOrInt("GRPC_AUTH_API_PORT", 50051)
 
 	//snowFlakeNodeNumber := utils.StringToInt64(utils.MustEnv("SNOWFLAKE_NODE_NUMBER"))
 	// TODO node number should come from env var

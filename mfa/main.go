@@ -10,22 +10,23 @@ import (
 	"log"
 	"sync"
 	"time"
+	"github.com/TeslaGov/envy"
 )
 
 func main() {
 	a := App{}
 
-	twilioAccountSid := utils.MustEnv("TWILIO_ACCOUNT_SID")
-	twilioAuthToken := utils.MustEnv("TWILIO_AUTH_TOKEN")
-	twilioPhoneNumber := utils.MustEnv("TWILIO_PHONE_NUMBER")
-	user := utils.EnvOrString("DB_USER", "alpaca")
-	pass := utils.MustEnv("DB_PASSWORD")
-	host := utils.MustEnv("DB_HOST")
-	dbName := utils.EnvOrString("DB_DATABASE", "alpaca_mfa")
-	origin := utils.MustEnv("ORIGIN_ALLOWED")
-	port := utils.EnvOrInt("APP_PORT", 8082)
-	maxWorkers := utils.EnvOrInt("MAX_WORKERS", 1)
-	grpcPort := utils.EnvOrInt("GRPC_PORT", 50052)
+	twilioAccountSid := envy.MustEnv("TWILIO_ACCOUNT_SID")
+	twilioAuthToken := envy.MustEnv("TWILIO_AUTH_TOKEN")
+	twilioPhoneNumber := envy.MustEnv("TWILIO_PHONE_NUMBER")
+	user := envy.EnvOrString("DB_USER", "alpaca")
+	pass := envy.MustEnv("DB_PASSWORD")
+	host := envy.MustEnv("DB_HOST")
+	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_mfa")
+	origin := envy.MustEnv("ORIGIN_ALLOWED")
+	port := envy.EnvOrInt("APP_PORT", 8082)
+	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
+	grpcPort := envy.EnvOrInt("GRPC_PORT", 50052)
 
 	twilio := gotwilio.NewTwilioClient(twilioAccountSid, twilioAuthToken)
 	twilioService := services.TwilioSvc{
