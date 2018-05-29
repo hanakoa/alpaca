@@ -14,18 +14,18 @@ import (
 func main() {
 	a := App{}
 
-	user := envy.EnvOrString("DB_USER", "alpaca")
-	pass := envy.MustEnv("DB_PASSWORD")
-	host := envy.MustEnv("DB_HOST")
-	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_password_reset")
-	origin := envy.MustEnv("ORIGIN_ALLOWED")
-	port := envy.EnvOrInt("APP_PORT", 8081)
-	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
+	user := envy.StringOr("DB_USER", "alpaca")
+	pass := envy.String("DB_PASSWORD")
+	host := envy.String("DB_HOST")
+	dbName := envy.StringOr("DB_DATABASE", "alpaca_password_reset")
+	origin := envy.String("ORIGIN_ALLOWED")
+	port := envy.IntOr("APP_PORT", 8081)
+	maxWorkers := envy.IntOr("MAX_WORKERS", 1)
 
-	grpcAuthHost := envy.EnvOrString("GRPC_AUTH_API_HOST", "localhost")
-	grpcAuthPort := envy.EnvOrInt("GRPC_AUTH_API_PORT", 50051)
+	grpcAuthHost := envy.StringOr("GRPC_AUTH_API_HOST", "localhost")
+	grpcAuthPort := envy.IntOr("GRPC_AUTH_API_PORT", 50051)
 
-	//snowFlakeNodeNumber := utils.StringToInt64(utils.MustEnv("SNOWFLAKE_NODE_NUMBER"))
+	//snowFlakeNodeNumber := utils.StringToInt64(utils.String("SNOWFLAKE_NODE_NUMBER"))
 	// TODO node number should come from env var
 	var snowflakeNodeNumber int64 = 1
 

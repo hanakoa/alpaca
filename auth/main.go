@@ -14,20 +14,20 @@ import (
 )
 
 func main() {
-	user := envy.EnvOrString("DB_USER", "alpaca")
-	pass := envy.MustEnv("DB_PASSWORD")
-	host := envy.MustEnv("DB_HOST")
-	rabbitmqEnabled := envy.EnvOrBool("RABBITMQ_ENABLED", false)
-	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_auth")
-	secret := envy.MustEnv("ALPACA_SECRET")
-	origin := envy.MustEnv("ORIGIN_ALLOWED")
-	port := envy.EnvOrInt("APP_PORT", 8080)
-	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
-	grpcPort := envy.EnvOrInt("GRPC_PORT", 50051)
-	grpcMFAHost := envy.EnvOrString("GRPC_MFA_API_HOST", "localhost")
-	grpcMFAPort := envy.EnvOrInt("GRPC_MFA_API_PORT", 50052)
+	user := envy.StringOr("DB_USER", "alpaca")
+	pass := envy.String("DB_PASSWORD")
+	host := envy.String("DB_HOST")
+	rabbitmqEnabled := envy.BoolOr("RABBITMQ_ENABLED", false)
+	dbName := envy.StringOr("DB_DATABASE", "alpaca_auth")
+	secret := envy.String("ALPACA_SECRET")
+	origin := envy.String("ORIGIN_ALLOWED")
+	port := envy.IntOr("APP_PORT", 8080)
+	maxWorkers := envy.IntOr("MAX_WORKERS", 1)
+	grpcPort := envy.IntOr("GRPC_PORT", 50051)
+	grpcMFAHost := envy.StringOr("GRPC_MFA_API_HOST", "localhost")
+	grpcMFAPort := envy.IntOr("GRPC_MFA_API_PORT", 50052)
 
-	//snowFlakeNodeNumber := utils.StringToInt64(utils.MustEnv("SNOWFLAKE_NODE_NUMBER"))
+	//snowFlakeNodeNumber := utils.StringToInt64(utils.String("SNOWFLAKE_NODE_NUMBER"))
 	// TODO node number should come from env var
 	var snowflakeNodeNumber int64 = 1
 

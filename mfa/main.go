@@ -16,17 +16,17 @@ import (
 func main() {
 	a := App{}
 
-	twilioAccountSid := envy.MustEnv("TWILIO_ACCOUNT_SID")
-	twilioAuthToken := envy.MustEnv("TWILIO_AUTH_TOKEN")
-	twilioPhoneNumber := envy.MustEnv("TWILIO_PHONE_NUMBER")
-	user := envy.EnvOrString("DB_USER", "alpaca")
-	pass := envy.MustEnv("DB_PASSWORD")
-	host := envy.MustEnv("DB_HOST")
-	dbName := envy.EnvOrString("DB_DATABASE", "alpaca_mfa")
-	origin := envy.MustEnv("ORIGIN_ALLOWED")
-	port := envy.EnvOrInt("APP_PORT", 8082)
-	maxWorkers := envy.EnvOrInt("MAX_WORKERS", 1)
-	grpcPort := envy.EnvOrInt("GRPC_PORT", 50052)
+	twilioAccountSid := envy.String("TWILIO_ACCOUNT_SID")
+	twilioAuthToken := envy.String("TWILIO_AUTH_TOKEN")
+	twilioPhoneNumber := envy.String("TWILIO_PHONE_NUMBER")
+	user := envy.StringOr("DB_USER", "alpaca")
+	pass := envy.String("DB_PASSWORD")
+	host := envy.String("DB_HOST")
+	dbName := envy.StringOr("DB_DATABASE", "alpaca_mfa")
+	origin := envy.String("ORIGIN_ALLOWED")
+	port := envy.IntOr("APP_PORT", 8082)
+	maxWorkers := envy.IntOr("MAX_WORKERS", 1)
+	grpcPort := envy.IntOr("GRPC_PORT", 50052)
 
 	twilio := gotwilio.NewTwilioClient(twilioAccountSid, twilioAuthToken)
 	twilioService := services.TwilioSvc{
