@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"github.com/bwmarrin/snowflake"
 	"net/http"
-	"github.com/kevinmichaelchen/my-go-utils"
+	requestUtils "github.com/kevinmichaelchen/my-go-utils/request"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
 	"encoding/json"
 	"gopkg.in/guregu/null.v3"
@@ -34,7 +35,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var resource LoginRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&resource); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
@@ -42,7 +43,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	login := strings.TrimSpace(resource.Login)
 
 	if login == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Must supply email address or username.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Must supply email address or username.")
 		return
 	}
 
@@ -51,11 +52,11 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	if isEmailAddress(login) {
 		emailAddress := login
 		if len(emailAddress) > 255 {
-			utils.RespondWithError(w, http.StatusBadRequest, "Email address should not exceed 255 chars.")
+			requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address should not exceed 255 chars.")
 			return
 		}
 		if err := checkmail.ValidateFormat(emailAddress); err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "Malformed email address.")
+			requestUtils.RespondWithError(w, http.StatusBadRequest, "Malformed email address.")
 			return
 		}
 		person, err = models.GetPersonByEmailAddress(svc.DB, emailAddress)
@@ -64,7 +65,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		username := login
 		if len(username) < MinUsernameLength || len(username) > MaxUsernameLength {
-			utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
+			requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
 			return
 		}
 		person = &models.Person{Username: null.StringFrom(username)}
@@ -72,28 +73,28 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		utils.RespondWithError(w, http.StatusForbidden, fmt.Sprintf("Authentication failed: %s", err.Error()))
+		requestUtils.RespondWithError(w, http.StatusForbidden, fmt.Sprintf("Authentication failed: %s", err.Error()))
 		return
 	}
 
 	if !person.CurrentPasswordID.Valid {
 		log.Printf("Person %d has no current password...\n", person.Id)
-		utils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
+		requestUtils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
 		return
 	}
 
 	password := &models.Password{Id: person.CurrentPasswordID.Int64}
 	if err = password.GetPasswordForPersonID(svc.DB); err != nil {
 		log.Printf("No Person exists for password %d...\n", person.CurrentPasswordID.Int64)
-		utils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
+		requestUtils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
 		return
 	}
 
 	passwordCorrect := models.MatchesHash(resource.Password, password)
 
-	l := &models.LoginAttempt{Id: utils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: passwordCorrect, PersonID: person.Id}
+	l := &models.LoginAttempt{Id: snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: passwordCorrect, PersonID: person.Id}
 	if err := l.CreateLoginAttempt(svc.DB); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -101,10 +102,10 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 		if person.MultiFactorRequired {
 			WriteMfaOptions(w, person)
 		} else {
-			utils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
+			requestUtils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
 		}
 	} else {
-		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials.")
+		requestUtils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials.")
 	}
 }
 

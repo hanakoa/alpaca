@@ -7,7 +7,8 @@ import (
 	"github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/hanakoa/alpaca/auth/models"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
-	"github.com/kevinmichaelchen/my-go-utils"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
+	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"log"
 	"sync"
 	"time"
@@ -35,7 +36,7 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	snowflakeNode := utils.InitSnowflakeNode(snowflakeNodeNumber)
+	snowflakeNode := snowflakeUtils.InitSnowflakeNode(snowflakeNodeNumber)
 	// TODO configurable duration?
 	iterationCount := models.CalibrateIterationCount(time.Millisecond * 1000)
 
@@ -56,5 +57,5 @@ func main() {
 
 func InitDB(user, password, host, dbname string) *sql.DB {
 	connectionString := fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
-	return utils.InitDatabase("postgres", connectionString, 3, time.Second*5)
+	return sqlUtils.InitDatabase("postgres", connectionString, 3, time.Second*5)
 }

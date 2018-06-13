@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"github.com/google/uuid"
 	"log"
-	"github.com/kevinmichaelchen/my-go-utils"
+	requestUtils "github.com/kevinmichaelchen/my-go-utils/request"
 	"github.com/hanakoa/alpaca/auth/models"
 )
 
@@ -17,10 +17,10 @@ type LoginResponse struct {
 func WriteMfaOptions(w http.ResponseWriter, person *models.Person) {
 	log.Printf("2FA required for person %d", person.Id)
 	if resetCodeID, err := uuid.NewRandom(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
 		log.Printf("Reset code is %s", resetCodeID)
 		mfaResponse := LoginResponse{MfaCode: resetCodeID}
-		utils.RespondWithJSON(w, http.StatusOK, mfaResponse)
+		requestUtils.RespondWithJSON(w, http.StatusOK, mfaResponse)
 	}
 }

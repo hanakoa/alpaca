@@ -4,7 +4,7 @@ import (
 	"golang.org/x/net/context"
 	pb "github.com/hanakoa/alpaca/auth/pb"
 	"fmt"
-	"github.com/kevinmichaelchen/my-go-utils"
+	grpcUtils "github.com/kevinmichaelchen/my-go-utils/grpc"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type AuthClient = pb.PersonServiceClient
 type PassClient = pb.ResetPasswordServiceClient
 
 func NewPassClient(host string, port int) PassClient {
-	conn := utils.InitGrpcConn(fmt.Sprintf("%s:%d", host, port), 3, time.Second*5)
+	conn := grpcUtils.InitGrpcConn(fmt.Sprintf("%s:%d", host, port), 3, time.Second*5)
 	return pb.NewResetPasswordServiceClient(conn)
 }
 

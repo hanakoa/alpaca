@@ -10,7 +10,9 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"time"
 	"gopkg.in/guregu/null.v3"
-	"github.com/kevinmichaelchen/my-go-utils"
+	requestUtils "github.com/kevinmichaelchen/my-go-utils/request"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
+	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"strings"
 	"fmt"
 	"log"
@@ -61,7 +63,7 @@ func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
 
 	people, err := models.GetPersons(svc.DB, int64(c), sort, count)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -77,13 +79,13 @@ func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response = cursor.EmptyPage()
 	}
-	utils.RespondWithJSON(w, http.StatusOK, response)
+	requestUtils.RespondWithJSON(w, http.StatusOK, response)
 	rabbitmq.Send(svc.PersonSender, "Getting people...")
 }
 
 func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "personId")
 	if !ok {
 		return
 	}
@@ -93,16 +95,16 @@ func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
 	if err := p.GetPerson(svc.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			utils.RespondWithError(w, http.StatusNotFound, "Person not found")
+			requestUtils.RespondWithError(w, http.StatusNotFound, "Person not found")
 		default:
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 
 	rabbitmq.Send(svc.PersonSender, "getting person...")
 	setStringsForPerson(&p)
-	utils.RespondWithJSON(w, http.StatusOK, p)
+	requestUtils.RespondWithJSON(w, http.StatusOK, p)
 }
 
 // TODO only admins can create
@@ -112,7 +114,7 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&req); err != nil {
 		log.Println("Invalid request payload")
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
@@ -128,18 +130,18 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	req.EmailAddress = strings.TrimSpace(req.EmailAddress)
 	if req.EmailAddress == "" {
 		log.Println("Must supply email address.")
-		utils.RespondWithError(w, http.StatusBadRequest, "Must supply email address.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Must supply email address.")
 		return
 	}
 
 	if len(req.EmailAddress) > 255 {
 		log.Println("Email address cannot exceed 255 chars.")
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address cannot exceed 255 chars.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address cannot exceed 255 chars.")
 		return
 	}
 
 	if err := checkmail.ValidateFormat(req.EmailAddress); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address has invalid format.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address has invalid format.")
 		return
 	}
 
@@ -147,16 +149,16 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		username := strings.TrimSpace(p.Username.String)
 		p.Username = null.StringFrom(username)
 		if username == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Username must be non-empty.")
+			requestUtils.RespondWithError(w, http.StatusBadRequest, "Username must be non-empty.")
 			return
 		}
 		usernameLen := len(username)
 		if usernameLen > MaxUsernameLength || usernameLen < MinUsernameLength {
-			utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
+			requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
 			return
 		}
 		if !isValidUsername(username) {
-			utils.RespondWithError(w, http.StatusBadRequest, "A username can only contain alphanumeric characters (letters A-Z, numbers 0-9) with the exception of underscores.")
+			requestUtils.RespondWithError(w, http.StatusBadRequest, "A username can only contain alphanumeric characters (letters A-Z, numbers 0-9) with the exception of underscores.")
 			return
 		}
 	}
@@ -164,25 +166,25 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	// TODO email address cannot already exist and be confirmed
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
-	personId := utils.NewPrimaryKey(svc.SnowflakeNode)
+	personId := snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
 	p.Id = personId
 	if err := p.CreatePerson(tx); err != nil {
 		tx.Rollback()
 		log.Printf("Could not create person: %s", err.Error())
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	emailAddressId := utils.NewPrimaryKey(svc.SnowflakeNode)
+	emailAddressId := snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
 	emailAddress := &models.EmailAddress{ID: emailAddressId, Primary: true, EmailAddress: req.EmailAddress, PersonID: p.Id}
 	if err := emailAddress.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -192,24 +194,24 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	if err := p.UpdatePerson(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not set primary email address for person")
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Println("PERSON CREATE - COMMIT FAILED")
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
 		setStringsForPerson(p)
 		rabbitmq.Send(svc.PersonSender, "created person")
-		utils.RespondWithJSON(w, http.StatusCreated, p)
+		requestUtils.RespondWithJSON(w, http.StatusCreated, p)
 	}
 }
 
 func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "personId")
 	if !ok {
 		return
 	}
@@ -217,70 +219,70 @@ func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 	var p models.Person
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
 	p.Id = id
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
 	// TODO do we need 2 calls?
 	if exists, err := p.Exists(tx); err != nil {
-		utils.RespondWithError(w, http.StatusNotFound, err.Error())
+		requestUtils.RespondWithError(w, http.StatusNotFound, err.Error())
 		return
 	} else if !exists {
-		utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No person found for id: %d", id))
+		requestUtils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No person found for id: %d", id))
 		return
 	}
 	// TODO update disabled
 	// TODO username must not be taken
 	if !p.PrimaryEmailAddressID.Valid {
-		utils.RespondWithError(w, http.StatusBadRequest, "Must provide primary email address ID")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Must provide primary email address ID")
 		return
 	}
 
 	if err := p.UpdatePerson(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := p.GetPerson(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
 		setStringsForPerson(&p)
 		rabbitmq.Send(svc.PersonSender, "updated person")
-		utils.RespondWithJSON(w, http.StatusOK, p)
+		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
 
 func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "personId")
 	if !ok {
 		return
 	}
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
 	// TODO you can only delete yourself, unless you're an admin
 	p := models.Person{Id: id, Deleted: null.TimeFrom(time.Now())}
 	if err := p.DeletePerson(tx); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -288,16 +290,16 @@ func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 
 	// Load new fields, like deleted_timestamp
 	if err := p.GetDeletedPerson(tx); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
 		setStringsForPerson(&p)
 		rabbitmq.Send(svc.PersonSender, "deleted person")
-		utils.RespondWithJSON(w, http.StatusOK, p)
+		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
 

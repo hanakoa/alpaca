@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/hanakoa/alpaca/mfa/services"
-	"github.com/kevinmichaelchen/my-go-utils"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	"github.com/kevinmichaelchen/my-go-utils/rabbitmq"
 	_ "github.com/lib/pq"
 	"log"
@@ -24,7 +24,7 @@ type App struct {
 // and creates routes for our REST API.
 func (a *App) Initialize(db *sql.DB, snowflakeNodeNumber int64, numWorkers int) {
 	rabbitmq.NewDispatcher(numWorkers, 10)
-	a.snowflakeNode = utils.InitSnowflakeNode(snowflakeNodeNumber)
+	a.snowflakeNode = snowflakeUtils.InitSnowflakeNode(snowflakeNodeNumber)
 	a.DB = db
 	a.initializeServices()
 	a.initializeRoutes()

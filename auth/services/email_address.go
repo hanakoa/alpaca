@@ -3,7 +3,9 @@ package services
 import (
 	"database/sql"
 	"github.com/bwmarrin/snowflake"
-	"github.com/kevinmichaelchen/my-go-utils"
+	requestUtils "github.com/kevinmichaelchen/my-go-utils/request"
+	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	"github.com/gorilla/mux"
 	"github.com/hanakoa/alpaca/auth/models"
 	"gopkg.in/guregu/null.v3"
@@ -55,7 +57,7 @@ func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http
 
 	emailAddresses, err := models.GetEmailAddresses(svc.DB, int64(c), sort, count)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -71,12 +73,12 @@ func (svc *EmailAddressService) GetEmailAddresses(w http.ResponseWriter, r *http
 	} else {
 		response = cursor.EmptyPage()
 	}
-	utils.RespondWithJSON(w, http.StatusOK, response)
+	requestUtils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "id")
+	id, ok := requestUtils.GetInt64(w, vars, "id")
 	if !ok {
 		return
 	}
@@ -87,14 +89,14 @@ func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.R
 	if err := e.GetEmailAddress(svc.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			utils.RespondWithError(w, http.StatusNotFound, "EmailAddress not found")
+			requestUtils.RespondWithError(w, http.StatusNotFound, "EmailAddress not found")
 		default:
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, e)
+	requestUtils.RespondWithJSON(w, http.StatusOK, e)
 }
 
 // TODO only admins can create, unless person is you
@@ -102,7 +104,7 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 	var e models.EmailAddress
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&e); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
@@ -112,83 +114,83 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 	e.LastModified = null.TimeFrom(now)
 
 	if e.ID != 0 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Do not provide an id.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Do not provide an id.")
 		return
 	}
 
 	e.EmailAddress = strings.TrimSpace(e.EmailAddress)
 	if e.EmailAddress == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Must supply email address.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Must supply email address.")
 		return
 	}
 
 	if len(e.EmailAddress) > 255 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address cannot exceed 255 chars.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address cannot exceed 255 chars.")
 		return
 	}
 
 	if e.Confirmed {
-		utils.RespondWithError(w, http.StatusBadRequest, "Cannot create confirmed email address.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Cannot create confirmed email address.")
 		return
 	}
 
 	if confirmed, err := e.IsConfirmed(svc.DB); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		requestUtils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if confirmed {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address already exists and is confirmed.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address already exists and is confirmed.")
 		return
 	}
 
 	if e.PersonID == 0 {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address must have person ID.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address must have person ID.")
 		return
 	}
 
 	if err := checkmail.ValidateFormat(e.EmailAddress); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address has invalid format.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address has invalid format.")
 		return
 	}
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
 	p := &models.Person{Id: e.PersonID}
 	if exists, err := p.Exists(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		requestUtils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if !exists {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for person ID: %d", e.PersonID))
+		requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for person ID: %d", e.PersonID))
 		return
 	}
 
-	e.ID = utils.NewPrimaryKey(svc.SnowflakeNode)
+	e.ID = snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
 	e.IdStr = strconv.FormatInt(e.ID, 10)
 	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 	if err := e.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
 		// TODO publish RabbitMQ message for email confirmation code
 		rabbitmq.Send(svc.EmailAddressSender, "Created email address...")
-		utils.RespondWithJSON(w, http.StatusCreated, e)
+		requestUtils.RespondWithJSON(w, http.StatusCreated, e)
 	}
 }
 
 func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "id")
+	id, ok := requestUtils.GetInt64(w, vars, "id")
 	if !ok {
 		return
 	}
@@ -196,36 +198,36 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 	var e models.EmailAddress
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&e); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
 	e.ID = id
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
 	if exists, err := e.Exists(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else if !exists {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No email address found for id: %d", id))
+		requestUtils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No email address found for id: %d", id))
 		return
 	}
 
 	if err := e.UpdateEmailAddress(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := e.GetEmailAddress(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -233,10 +235,10 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		utils.RespondWithJSON(w, http.StatusOK, e)
+		requestUtils.RespondWithJSON(w, http.StatusOK, e)
 	}
 }
 
@@ -245,13 +247,13 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 // nobody (not even admins) can delete primary emails
 func (svc *EmailAddressService) DeleteEmailAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := utils.GetInt64(w, vars, "id")
+	id, ok := requestUtils.GetInt64(w, vars, "id")
 	if !ok {
 		return
 	}
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB); if err != nil {
+	tx, err := sqlUtils.StartTransaction(w, svc.DB); if err != nil {
 		return
 	}
 
@@ -260,44 +262,44 @@ func (svc *EmailAddressService) DeleteEmailAddress(w http.ResponseWriter, r *htt
 
 	if exists, err := e.Exists(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else if !exists {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No email address found for id: %d", id))
+		requestUtils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No email address found for id: %d", id))
 		return
 	}
 
 	if err := e.GetEmailAddress(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if e.Primary {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusBadRequest, "Email address is primary.")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address is primary.")
 		return
 	}
 
 	if err := e.DeleteEmailAddress(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := e.GetDeletedEmailAddress(tx); err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	e.IdStr = strconv.FormatInt(e.ID, 10)
 	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		utils.RespondWithJSON(w, http.StatusOK, e)
+		requestUtils.RespondWithJSON(w, http.StatusOK, e)
 	}
 }
