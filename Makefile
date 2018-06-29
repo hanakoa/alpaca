@@ -47,94 +47,10 @@ run-password-reset:
 run-mfa:
 	TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID} TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN} TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER} RABBITMQ_ENABLED=false ORIGIN_ALLOWED=http://localhost:3000 DB_PASSWORD=password DB_HOST=localhost ./bin/alpaca-mfa
 
-.PHONY: docker
-docker:
-	@$(MAKE) docker-remove
-	@$(MAKE) docker-rebuild
-	@$(MAKE) docker-start
-	@$(MAKE) docker-seed
-
-.PHONY: docker-build
-docker-build:
-	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
-	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile .
-	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile .
-	docker-compose build
-
-.PHONY: docker-rebuild
-docker-rebuild:
-	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile . --no-cache
-	docker-compose build
-
-.PHONY: docker-remove
-docker-remove:
-	docker rm --force alpaca-auth-api || true
-	docker rm --force alpaca-auth-db || true
-	docker rm --force alpaca-password-reset-api || true
-	docker rm --force alpaca-password-reset-db || true
-	docker rm --force alpaca-rabbitmq || true
-
-.PHONY: docker-start
-docker-start:
-	docker-compose up -d
-
-.PHONY: docker-stop
-docker-stop:
-	docker-compose stop
-
-
-
-.PHONY: docker-seed
-docker-seed:
-	./scripts/seed-data.sh "docker"
-
-.PHONY: seed
-seed:
-	./scripts/seed-data.sh "local"
-
-.PHONY: test-seed
-test-seed:
-	./scripts/seed-data.sh "test"
-
-
-
-minikube-build:
-	@eval $$(minikube docker-env) ;\
-	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
-#	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile .
-#	docker image build -t hanakoa/alpaca-ui -f ui/Dockerfile .
-
-.PHONY: protoc
-protoc:
-	protoc -I auth auth/pb/auth.proto --go_out=plugins=grpc:auth
-	protoc -I mfa mfa/pb/mfa.proto --go_out=plugins=grpc:mfa
-
-.PHONY: lint
-lint:
-	golint ./auth
-	golint ./password-reset
-	golint ./mfa
-
-.PHONY: fmt
-fmt:
-	go fmt ./auth
-	go fmt ./password-reset
-	go fmt ./mfa
-
-.PHONY: vet
-vet:
-	go tool vet auth
-	go tool vet password-reset
-	go tool vet mfa
-
 .PHONY: test
 test:
 	@$(MAKE) test-seed
 	go test -v ./auth
-
-
 
 .PHONY: list-users
 list-users:
@@ -144,31 +60,4 @@ list-users:
 create-user:
 	http POST localhost:8080/person username="kevin_chen" emailAddress="kevin.chen.bulk@gmail.com"
 
-.PHONY: install-proto
-install-proto:
-	go get -u github.com/golang/protobuf/protoc-gen-go
-
-
-#####################
-## CLUSTER METHODS ##
-#####################
-.PHONY: mk-start
-mk-start:
-	minikube start --memory 2048 --cpus 2 --vm-driver=hyperkit
-
-.PHONY: mk-stop
-mk-stop:
-	minikube stop
-
-.PHONY: mk-upgrade
-mk-upgrade:
-	@$(MAKE) mk-stop
-	brew cask reinstall minikube
-
-.PHONY: kb-create
-kb-create:
-	kubectl create -f ./kube/
-
-.PHONY: kb-delete
-kb-delete:
-	@kubectl delete svc,deploy --selector="app=alpaca-auth"
+include makefiles/*.mk
