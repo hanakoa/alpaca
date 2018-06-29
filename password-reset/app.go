@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	authGRPC "github.com/hanakoa/alpaca/auth/grpc"
 	"github.com/hanakoa/alpaca/password-reset/services"
-	"github.com/kevinmichaelchen/my-go-utils"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	"github.com/kevinmichaelchen/my-go-utils/rabbitmq"
 	_ "github.com/lib/pq"
 	"log"
@@ -30,7 +30,7 @@ func (a *App) Initialize(
 	passClient authGRPC.PassClient) {
 	rabbitmq.NewDispatcher(numWorkers, 10)
 
-	a.snowflakeNode = utils.InitSnowflakeNode(snowflakeNodeNumber)
+	a.snowflakeNode = snowflakeUtils.InitSnowflakeNode(snowflakeNodeNumber)
 	a.DB = db
 	a.svc = services.PasswordResetSvc{DB: a.DB, SnowflakeNode: a.snowflakeNode, PassClient: passClient}
 	a.initializeRoutes()

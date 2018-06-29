@@ -2,7 +2,8 @@ package services
 
 import (
 	"database/sql"
-	"github.com/kevinmichaelchen/my-go-utils"
+	requestUtils "github.com/kevinmichaelchen/my-go-utils/request"
+	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"strings"
 	"github.com/badoux/checkmail"
 	"fmt"
@@ -40,22 +41,22 @@ func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
 	var p SendCodeRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
 
 	var tx *sql.Tx
-	tx, err := utils.StartTransaction(w, svc.DB);
+	tx, err := sqlUtils.StartTransaction(w, svc.DB);
 	if err != nil {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if strings.TrimSpace(p.Account) == "" {
 		tx.Rollback()
-		utils.RespondWithError(w, http.StatusInternalServerError, "Account field cannot be empty.")
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, "Account field cannot be empty.")
 		return
 	}
 
@@ -64,7 +65,7 @@ func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		// We deliberately do not leak if email is not found
 		// TODO RespondWithJSON doesn't actually return JSON
-		utils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
+		requestUtils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
 		return
 	}
 
@@ -72,7 +73,7 @@ func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		tx.Rollback()
 		// We deliberately do not leak if email is not found
-		utils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
+		requestUtils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
 		return
 	}
 	if sendCodeOptions.NumOptions() == 1 {
@@ -82,26 +83,26 @@ func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
 		expiration := time.Now().Add(time.Minute * 30)
 		if resetCode, err := models.NewPasswordResetCode(personID, expiration); err != nil {
 			tx.Rollback()
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
 			if err := resetCode.CreatePasswordResetCode(tx); err != nil {
 				tx.Rollback()
-				utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+				requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			}
 		}
 
 		if err := tx.Commit(); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
-			utils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
+			requestUtils.RespondWithJSON(w, http.StatusOK, "Reset request submitted.")
 		}
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
-		utils.RespondWithJSON(w, http.StatusOK, sendCodeOptions)
+		requestUtils.RespondWithJSON(w, http.StatusOK, sendCodeOptions)
 	}
 }
 

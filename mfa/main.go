@@ -6,7 +6,7 @@ import (
 	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/mfa/grpc"
 	"github.com/hanakoa/alpaca/mfa/services"
-	"github.com/kevinmichaelchen/my-go-utils"
+	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"github.com/sfreiberg/gotwilio"
 	"log"
 	"sync"
@@ -59,5 +59,5 @@ func main() {
 
 func initDB(user, password, host, dbname string) *sql.DB {
 	connectionString := fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable", user, password, host, dbname)
-	return utils.InitDatabase("postgres", connectionString, 3, time.Second*5)
+	return sqlUtils.InitDatabase("postgres", connectionString, 3, time.Second*5)
 }
