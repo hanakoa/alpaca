@@ -72,7 +72,7 @@ func TestSendPasswordResetPhoneNumber(t *testing.T) {
 }
 
 func sendCodeRequest(account string) string {
-	sendCodeRequest := &services.SendCodeRequest{Account: account}
+	sendCodeRequest := &services.CodeOptionsRequest{Account: account}
 	b, err := json.Marshal(sendCodeRequest)
 	So(err, ShouldBeNil)
 

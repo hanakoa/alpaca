@@ -15,18 +15,19 @@ import (
 	"github.com/ttacon/libphonenumber"
 )
 
-type SendCodeRequest struct {
+type CodeOptionsRequest struct {
 	// Account can be an email address, phone number, or username
 	Account string `json:"account"`
 }
 
-type SendCodeOptions struct {
+// CodeOptionsResponse contains all possible ways a user can login with.
+type CodeOptionsResponse struct {
 	PhoneNumbers   []models.PhoneNumber  `json:"phone_numbers"`
 	EmailAddresses []models.EmailAddress `json:"email_addresses"`
 	// TODO eventually we'll add Yubikey devices and backup recovery codes
 }
 
-func (s *SendCodeOptions) NumOptions() int {
+func (s *CodeOptionsResponse) NumOptions() int {
 	num := 0
 	if s.PhoneNumbers != nil {
 		num += len(s.PhoneNumbers)
@@ -37,8 +38,8 @@ func (s *SendCodeOptions) NumOptions() int {
 	return num
 }
 
-func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
-	var p SendCodeRequest
+func (svc *PasswordResetSvc) SendCodeOptions(w http.ResponseWriter, r *http.Request) {
+	var p CodeOptionsRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
 		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
@@ -106,8 +107,8 @@ func (svc *PasswordResetSvc) SendCode(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSendOptions(personID int64, tx *sql.Tx) (*SendCodeOptions, error) {
-	options := &SendCodeOptions{}
+func getSendOptions(personID int64, tx *sql.Tx) (*CodeOptionsResponse, error) {
+	options := &CodeOptionsResponse{}
 	if phoneNumbers, err := models.GetPhoneNumbersForPerson(personID, tx); err != nil {
 		return nil, err
 	} else {
