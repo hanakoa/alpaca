@@ -55,7 +55,7 @@ test:
 .PHONY: convey
 convey:
 #	go get github.com/smartystreets/goconvey
-	$GOPATH/bin/goconvey
+	${GOPATH}/bin/goconvey
 
 .PHONY: list-users
 list-users:
