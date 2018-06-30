@@ -52,6 +52,11 @@ test:
 	@$(MAKE) test-seed
 	go test -v ./auth
 
+.PHONY: convey
+convey:
+#	go get github.com/smartystreets/goconvey
+	$GOPATH/bin/goconvey
+
 .PHONY: list-users
 list-users:
 	http localhost:8080/person

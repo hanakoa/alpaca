@@ -70,10 +70,3 @@ kubectl logs $(kubectl get po -l app=alpaca-auth,tier=api -o jsonpath="{.items[0
 # delete services
 make kb-delete
 ```
-
-## Testing
-```
-go get github.com/smartystreets/goconvey
-$GOPATH/bin/goconvey
-```
-
