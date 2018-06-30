@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"github.com/hanakoa/alpaca/auth/models"
 	"github.com/hanakoa/alpaca/auth/services"
-	"github.com/kevinmichaelchen/my-go-utils"
+	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
+	stringUtils "github.com/kevinmichaelchen/my-go-utils/string"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/guregu/null.v3"
 	"log"
@@ -25,7 +26,7 @@ func TestMain(m *testing.M) {
 	MyApp = App{RabbitmqEnabled: false, iterationCount: 10}
 	DB = InitDB("alpaca", "password", "localhost", "alpaca_auth_test")
 	secret := "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF"
-	MyApp.snowflakeNode = utils.InitSnowflakeNode(1)
+	MyApp.snowflakeNode = snowflakeUtils.InitSnowflakeNode(1)
 	MyApp.Initialize(DB, secret, 1)
 
 	code := m.Run()
@@ -38,7 +39,7 @@ func GetString(m map[string]interface{}, key string) string {
 }
 
 func GetInt64(m map[string]interface{}, key string) int64 {
-	return utils.StringToInt64(GetString(m, key))
+	return stringUtils.StringToInt64(GetString(m, key))
 }
 
 func ClearTable() {
