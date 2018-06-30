@@ -8,14 +8,22 @@ import (
 	"log"
 )
 
+// PasswordResetCode a password reset code
 type PasswordResetCode struct {
+	// Code a randomly generated reset code
 	Code       string    `json:"code"`
+	// Used indicates whether a password reset code has been used. Used codes are necessarily unusable.
 	Used       bool      `json:"used"`
+	// Usable indicates whether this password reset code can be used. When a user uses a reset code,
+	// all previously issued codes are rendered unusable.
 	Usable     bool      `json:"usable"`
+	// Expiration when the reset code expires
 	Expiration time.Time `json:"expiration"`
+	// PersonID the person to which this code belongs
 	PersonID   int64     `json:"person_id"`
 }
 
+// NewPasswordResetCode generates a fresh, unused code for the given account, with the given expiration time.
 func NewPasswordResetCode(personID int64, expiration time.Time) (*PasswordResetCode, error) {
 	var id string
 	if u, err := uuid.NewRandom(); err != nil {
@@ -33,6 +41,7 @@ func NewPasswordResetCode(personID int64, expiration time.Time) (*PasswordResetC
 		PersonID:   personID}, nil
 }
 
+// CreatePasswordResetCode inserts a reset code record into the database.
 func (c *PasswordResetCode) CreatePasswordResetCode(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
@@ -42,6 +51,7 @@ func (c *PasswordResetCode) CreatePasswordResetCode(q sqlexp.Querier) error {
 	return err
 }
 
+// HasCode returns true if a usable password reset code
 func (c *PasswordResetCode) HasCode(q sqlexp.Querier) (bool, error) {
 	var count int
 	row := q.QueryRowContext(
@@ -49,28 +59,31 @@ func (c *PasswordResetCode) HasCode(q sqlexp.Querier) (bool, error) {
 		"SELECT COUNT(*) AS count " +
 			"FROM password_reset_code " +
 			"WHERE code = $1 " +
-			"AND usable = $2 " +
-			"AND used = $3 " +
-			"AND expiration_timestamp > $4", c.Code, true, false, time.Now())
+			"AND usable = TRUE " +
+			"AND used = FALSE " +
+			"AND expiration_timestamp > $2", c.Code, time.Now())
 	err := row.Scan(&count)
 	if err != nil {
 		return false, err
 	}
-	return count == 1, nil
+	return count > 1, nil
 }
 
+// MarkAsUsed sets a particular reset code as unused.
 func (c *PasswordResetCode) MarkAsUsed(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"UPDATE password_reset_code SET used=$1, usable=$2 WHERE code=$3",
-		true, false, c.Code)
+		"UPDATE password_reset_code SET used=TRUE, usable=FALSE WHERE code=$1",
+		c.Code)
 	return err
 }
 
+// MarkAllAsUnusable renders all of a user's extant reset codes as unusable.
+// This function is invoked when a user successfully uses one of their reset codes.
 func (c *PasswordResetCode) MarkAllAsUnusable(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"UPDATE password_reset_code SET usable=$1 WHERE person_id=$2",
-		false, c.PersonID)
+		"UPDATE password_reset_code SET usable=FALSE WHERE person_id=$1",
+		c.PersonID)
 	return err
 }

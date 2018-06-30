@@ -39,7 +39,6 @@ func (a *App) Initialize(
 func (a *App) initializeRoutes() {
 	a.Router = mux.NewRouter()
 
-	// Send code to requestBody.emailAddress
 	a.Router.HandleFunc("/password-reset", a.svc.SendCodeOptions).Methods("POST")
 	a.Router.HandleFunc("/password-reset/{code:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}}", a.svc.VerifyCode).Methods("GET")
 	a.Router.HandleFunc("/password-reset", a.svc.ResetPassword).Methods("PUT")

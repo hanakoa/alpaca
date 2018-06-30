@@ -13,7 +13,7 @@ import (
 func (svc *PasswordResetSvc) VerifyCode(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	codeString := vars["code"]
-	log.Println("Parsing:", codeString)
+	log.Println("Verifying password reset code:", codeString)
 	if _, err := uuid.Parse(codeString); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
