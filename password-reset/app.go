@@ -47,11 +47,11 @@ func (a *App) initializeRoutes() {
 
 // ServeRest runs the server
 func (a *App) ServeRest(addr, origin string) {
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Access-Control-Allow-Origin"})
 	originsOk := handlers.AllowedOrigins([]string{origin})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "DELETE", "POST", "PUT", "OPTIONS"})
 	log.Printf("Allowing origin: %s\n", origin)
-	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk, headersOk, methodsOk)(a.Router)))
+	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk, handlers.AllowCredentials(), headersOk, methodsOk)(a.Router)))
 }
 
 // ListenForRabbitMqEvents listens for events
