@@ -1,5 +1,7 @@
 # alpaca
 [![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
+[![GoDoc](https://godoc.org/github.com/hanakoa/alpaca?status.svg)](https://godoc.org/github.com/hanakoa/alpaca)
+[![Go report](http://goreportcard.com/badge/hanakoa/alpaca)](http://goreportcard.com/report/hanakoa/alpaca)
 
 <p align="center">
  <figure>
