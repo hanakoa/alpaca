@@ -70,3 +70,38 @@ kubectl logs $(kubectl get po -l app=alpaca-auth,tier=api -o jsonpath="{.items[0
 # delete services
 make kb-delete
 ```
+
+## Make targets
+
+### Docker
+| Command               | Description                                |
+| --------------------- |:------------------------------------------:|
+| `make docker-start`   | starts µServices via Docker Compose        |
+| `make docker-stop`    | stops µServices running via Docker Compose |
+| `make docker-build`   | builds images of all µServices             |
+| `make docker-rebuild` | rebuilds images of all µServices           |
+| `make docker-remove`  | removes containers                         |
+
+### Minikube
+| Command               | Description                            |
+| --------------------- |:--------------------------------------:|
+| `make mk-start`       | Starts minikube cluster                |
+| `make mk-stop`        | Stops minikube cluster                 |
+| `make mk-upgrade`     | Re-installs latest version of minikube |
+| `make mk-build`       | Builds Docker images for minikube      |
+| `make mk-rebuild`     | Rebuilds Docker images for minikube    |
+| `make kb-create`      | Starts µServices in your Kube cluster  |
+| `make kb-delete`      | Stops µServices in your Kube cluster  |
+
+### Protocol Buffers
+| Command               | Description               |
+| --------------------- |:-------------------------:|
+| `make protoc`         | compiles Protocol Buffers |
+| `make install-proto`  | installs [protoc-gen-go](https://godoc.org/github.com/golang/protobuf/protoc-gen-go) for compiling Protocol Buffers |
+
+### Code quality
+| Command        | Description                                  |
+| -------------- |:--------------------------------------------:|
+| `make lint`    | [lints](https://github.com/golang/lint) code |
+| `make fmt`    | [formats](https://golang.org/cmd/gofmt/) code |
+| `make vet`    | [vets](https://golang.org/cmd/vet/) code      |
