@@ -1,5 +1,10 @@
+DOCKER_ORG := hanakoa
+DOCKER_IMAGE_VERSION = v0.0.1
+SERVICES = auth mfa password-reset
+
 .PHONY: docker
 docker:
+	@$(MAKE) docker-stop
 	@$(MAKE) docker-remove
 	@$(MAKE) docker-rebuild
 	@$(MAKE) docker-start
@@ -7,25 +12,27 @@ docker:
 
 .PHONY: docker-build
 docker-build:
-	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile .
-	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile .
-	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile .
+	for svc in $(SERVICES); do \
+		echo Building image for $$svc; \
+		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $$svc/Dockerfile . ; \
+	done
 	docker-compose build
 
 .PHONY: docker-rebuild
 docker-rebuild:
-	docker image build -t hanakoa/alpaca-auth-api:v0.0.1 -f auth/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-mfa-api:v0.0.1 -f mfa/Dockerfile . --no-cache
-	docker image build -t hanakoa/alpaca-password-reset-api:v0.0.1 -f password-reset/Dockerfile . --no-cache
+	for svc in $(SERVICES); do \
+		echo Rebuilding image for $$svc; \
+		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $$svc/Dockerfile . --no-cache ; \
+	done
 	docker-compose build
 
 .PHONY: docker-remove
 docker-remove:
-	docker rm --force alpaca-auth-api || true
-	docker rm --force alpaca-auth-db || true
-	docker rm --force alpaca-password-reset-api || true
-	docker rm --force alpaca-password-reset-db || true
-	docker rm --force alpaca-rabbitmq || true
+	for svc in $(SERVICES); do \
+		echo Removing image for $$svc; \
+		docker rm --force alpaca-$$svc-api || true
+	done
+	@docker rm --force alpaca-rabbitmq || true
 
 .PHONY: docker-start
 docker-start:
@@ -33,4 +40,4 @@ docker-start:
 
 .PHONY: docker-stop
 docker-stop:
-	docker-compose stop
+	@docker-compose stop || true
