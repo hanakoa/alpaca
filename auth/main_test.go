@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/auth/models"
 	"github.com/hanakoa/alpaca/auth/services"
 	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
@@ -16,7 +17,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"github.com/TeslaGov/envy"
 )
 
 var MyApp App

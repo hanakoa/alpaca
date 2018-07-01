@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/password-reset/services"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"github.com/TeslaGov/envy"
 )
 
 var a App
