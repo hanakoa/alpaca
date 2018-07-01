@@ -18,11 +18,11 @@
 Alpaca is a WIP microservices system that handles authentication and authorization.
 
 It provides:
-- login with email, username, or password
-- two-factor auth with phone call, SMS, or Yubikey
-- password resets
-- email confirmation codes
-- phone number confirmation codes
+- [x] login with email, username, or password
+- [ ] two-factor auth with phone call, SMS, or Yubikey
+- [ ] password resets
+- [ ] email confirmation codes
+- [ ] phone number confirmation codes
 
 ## FAQ
 - [What stack do we use?](./docs/stack.md)
