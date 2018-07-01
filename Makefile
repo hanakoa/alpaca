@@ -49,7 +49,6 @@ run-mfa:
 
 .PHONY: test
 test:
-	@$(MAKE) test-seed
 	go test -v ./auth
 
 .PHONY: convey
