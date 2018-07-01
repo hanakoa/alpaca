@@ -38,7 +38,7 @@ jobs:
           command: go get -v ./...
 
       - run:
-          name: Waiting for Postgres to be ready
+          name: Waiting for all Postgres instances to be ready
           command: |
             for i in `seq 1 10`;
             do
@@ -49,8 +49,16 @@ jobs:
             echo Failed waiting for Postgres && exit 1
 
       - run:
+          name: Install postgresql-client
+          command: |
+            apk update
+            apk add postgresql-client
+
+      - run:
           name: Seeding Databases
-          command: make docker-seed
+          command: |
+            psql --host alpaca-auth-db -U alpaca -d alpaca_auth_test < scripts/seed-data-auth.sql
+            psql --host alpaca-password-reset-db -U alpaca -d alpaca_password_reset_test < scripts/seed-data-password-reset.sql
 
       - run:
           name: Run unit tests
