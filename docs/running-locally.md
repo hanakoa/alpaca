@@ -18,12 +18,7 @@ Install golang.
 #### Protocol Buffers
 You need to be able to compile protocol buffers with `protoc`: 
 ```bash
-brew install protobuf
-```
-
-Also install `protoc-gen-go` with
-```bash
-go get -u github.com/golang/protobuf/protoc-gen-go
+make install-proto
 ```
 
 ### Building and Running

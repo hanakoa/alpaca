@@ -25,11 +25,7 @@ $ time go build -o ./bin/alpaca-auth ./auth
 Running feels instantaneous. Doing a `./gradlew bootRun` on a Spring Boot app, on the other hand, takes nearly 15 seconds.
 
 #### Fewer lines of code!
-```
-$ find . -name "*.go" ! -name '*_test.go' | xargs wc -l | sort | tail -n 1
-    2408 total
-```
-
+`tokei` reports 3293 LOC.
 In Java, the lines of code could easily be 4 times this.
 
 ### Microservices, not monolith!
