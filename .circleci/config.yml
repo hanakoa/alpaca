@@ -58,7 +58,7 @@ jobs:
       # we've added it here for the sake of explanation.
       - run:
           name: Fetching dependencies
-          command: go get -v ./...
+          command: go get -v -t ./...
       - run:
           name: Run unit tests
           environment:
