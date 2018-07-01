@@ -30,7 +30,7 @@ docker-rebuild:
 docker-remove:
 	for svc in $(SERVICES); do \
 		echo Removing image for $$svc; \
-		docker rm --force alpaca-$$svc-api || true ; \
+		@docker rm --force alpaca-$$svc-api || true ; \
 	done
 	@docker rm --force alpaca-rabbitmq || true
 
