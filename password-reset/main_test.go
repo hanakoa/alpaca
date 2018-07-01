@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"github.com/TeslaGov/envy"
 )
 
 var a App
@@ -17,8 +18,8 @@ var db *sql.DB
 
 func TestMain(m *testing.M) {
 	a = App{}
-
-	db = InitDB("alpaca", "password", "localhost", "alpaca_password_reset_test")
+	dbHost := envy.StringOr("DB_HOST", "localhost")
+	db = InitDB("alpaca", "password", dbHost, "alpaca_password_reset_test")
 	ClearTable(db)
 	a.Initialize(db, 1, 1, nil)
 

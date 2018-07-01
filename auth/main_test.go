@@ -16,6 +16,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"github.com/TeslaGov/envy"
 )
 
 var MyApp App
@@ -24,7 +25,8 @@ var DB *sql.DB
 func TestMain(m *testing.M) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	MyApp = App{RabbitmqEnabled: false, iterationCount: 10}
-	DB = InitDB("alpaca", "password", "localhost", "alpaca_auth_test")
+	dbHost := envy.StringOr("DB_HOST", "localhost")
+	DB = InitDB("alpaca", "password", dbHost, "alpaca_auth_test")
 	secret := "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF"
 	MyApp.snowflakeNode = snowflakeUtils.InitSnowflakeNode(1)
 	MyApp.Initialize(DB, secret, 1)
