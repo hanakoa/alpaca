@@ -29,6 +29,7 @@ It provides:
 - [How do I run locally?](./docs/running-locally.md)
 - [How do I run in Docker?](./docs/running-with-docker.md)
 - [How do I run in minikube?](./docs/running-with-minikube.md)
+- [How do I use the REST API](./docs/using-rest-api.md)
 
 ## Notes on Contributing
 - `make protoc` will regenerate Go code from Protocol Buffers
