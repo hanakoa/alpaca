@@ -1,0 +1,73 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
+      - image: circleci/golang:1.10.3
+      # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
+      - image: circleci/postgres:10.4-alpine
+        name: alpaca-auth-db
+        environment:
+          POSTGRES_USER: alpaca
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: alpaca_auth
+      - image: circleci/postgres:10.4-alpine
+        name: alpaca-password-reset-db
+        environment:
+          POSTGRES_USER: alpaca
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: alpaca_password_reset
+
+    working_directory: /go/src/github.com/hanakoa/alpaca
+
+    environment:
+      TEST_RESULTS: /tmp/test-results
+
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS
+
+      - restore_cache:
+          keys:
+            - v1-pkg-cache
+
+      # Normally, this step would be in a custom primary image;
+      # we've added it here for the sake of explanation.
+      - run: go get ./...
+
+      - run:
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+
+      - run:
+          name: Seeding Databases
+          command: make docker-seed
+
+      - run:
+          name: Run unit tests
+          environment:
+            CONTACTS_DB_URL: "postgres://circleci-demo-go@localhost:5432/circle_test?sslmode=disable"
+          command: |
+            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            make test | tee ${TEST_RESULTS}/go-test.out
+
+      - run: make build
+
+      - save_cache:
+          key: v1-pkg-cache
+          paths:
+            - "/go/pkg"
+
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/test-results
