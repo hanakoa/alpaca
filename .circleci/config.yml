@@ -48,8 +48,10 @@ jobs:
           name: Seeding Databases
           command: |
             echo "alpaca-auth-db:5432:alpaca_auth_test:alpaca:password" > ~/.pgpass
+            chmod 600 ~/.pgpass
             psql --host alpaca-auth-db -U alpaca -d alpaca_auth_test < scripts/seed-data-auth.sql
             echo "alpaca-password-reset-db:5432:alpaca_password_reset_test:alpaca:password" > ~/.pgpass
+            chmod 600 ~/.pgpass
             psql --host alpaca-password-reset-db -U alpaca -d alpaca_password_reset_test < scripts/seed-data-password-reset.sql
 
       # Normally, this step would be in a custom primary image;
