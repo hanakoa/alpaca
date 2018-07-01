@@ -10,13 +10,13 @@ jobs:
         environment:
           POSTGRES_USER: alpaca
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: alpaca_auth
+          POSTGRES_DB: alpaca_auth_test
       - image: circleci/postgres:10.4-alpine
         name: alpaca-password-reset-db
         environment:
           POSTGRES_USER: alpaca
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: alpaca_password_reset
+          POSTGRES_DB: alpaca_password_reset_test
 
     working_directory: /go/src/github.com/hanakoa/alpaca
 
@@ -33,7 +33,9 @@ jobs:
 
       # Normally, this step would be in a custom primary image;
       # we've added it here for the sake of explanation.
-      - run: go get ./...
+      - run:
+          name: Fetching dependencies
+          command: go get -v ./...
 
       - run:
           name: Waiting for Postgres to be ready
