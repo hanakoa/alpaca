@@ -5,6 +5,7 @@ jobs:
       # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
       - image: circleci/golang:1.10.3
       # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
+      # https://circleci.com/docs/2.0/circleci-images/#postgresql
       - image: circleci/postgres:10.4-alpine
         name: alpaca-auth-db
         environment:
@@ -47,12 +48,6 @@ jobs:
               sleep 1
             done
             echo Failed waiting for Postgres && exit 1
-
-      - run:
-          name: Install postgresql-client
-          command: |
-            apk update
-            apk add postgresql-client
 
       - run:
           name: Seeding Databases
