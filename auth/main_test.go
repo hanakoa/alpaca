@@ -25,7 +25,7 @@ var DB *sql.DB
 func TestMain(m *testing.M) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	MyApp = App{RabbitmqEnabled: false, iterationCount: 10}
-	dbHost := envy.StringOr("DB_HOST", "localhost")
+	dbHost := envy.StringOr("AUTH_DB_HOST", "localhost")
 	DB = InitDB("alpaca", "password", dbHost, "alpaca_auth_test")
 	secret := "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF"
 	MyApp.snowflakeNode = snowflakeUtils.InitSnowflakeNode(1)

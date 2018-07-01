@@ -18,7 +18,7 @@ var db *sql.DB
 
 func TestMain(m *testing.M) {
 	a = App{}
-	dbHost := envy.StringOr("DB_HOST", "localhost")
+	dbHost := envy.StringOr("PASSWORD_RESET_DB_HOST", "localhost")
 	db = InitDB("alpaca", "password", dbHost, "alpaca_password_reset_test")
 	ClearTable(db)
 	a.Initialize(db, 1, 1, nil)

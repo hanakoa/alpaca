@@ -62,7 +62,8 @@ jobs:
       - run:
           name: Run unit tests
           environment:
-            CONTACTS_DB_URL: "postgres://circleci-demo-go@localhost:5432/circle_test?sslmode=disable"
+            AUTH_DB_HOST: "alpaca-auth-db"
+            PASSWORD_RESET_DB_HOST: "alpaca-password-reset-db"
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
             make test | tee ${TEST_RESULTS}/go-test.out

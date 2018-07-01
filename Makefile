@@ -51,10 +51,6 @@ run-mfa:
 test:
 	go test -v ./auth
 
-.PHONY: circle-test
-circle-test:
-	DB_HOST=alpaca-auth-db go test -v ./auth
-
 .PHONY: convey
 convey:
 #	go get github.com/smartystreets/goconvey
