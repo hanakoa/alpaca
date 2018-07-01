@@ -43,7 +43,7 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
 
-      - run: sudo apt update && sudo apt-get install postgresql-client-10
+      - run: sudo apt update && sudo apt install postgresql-client
       - run:
           name: Seeding Databases
           command: |
