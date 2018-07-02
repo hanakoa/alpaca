@@ -42,7 +42,7 @@
   "devDependencies": {
     "husky": "^0.14.3",
     "npm-run-all": "^4.1.2",
-    "prettier": "^1.10.2",
+    "prettier": "1.13.7",
     "pretty-quick": "^1.4.1",
     "redux-devtools": "^3.4.1",
     "redux-devtools-dock-monitor": "^1.1.3",
