@@ -2,7 +2,7 @@
 [![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
 [![GoDoc](https://godoc.org/github.com/hanakoa/alpaca?status.svg)](https://godoc.org/github.com/hanakoa/alpaca)
 [![Go report](http://goreportcard.com/badge/hanakoa/alpaca)](http://goreportcard.com/report/hanakoa/alpaca)
-[![CircleCI](https://circleci.com/gh/hanakoa/alpaca.svg?style=svg)](https://circleci.com/gh/hanakoa/alpaca)
+[![CircleCI](https://circleci.com/gh/hanakoa/alpaca.svg?style=shield)](https://circleci.com/gh/hanakoa/alpaca)
 [![Coverage Status](https://coveralls.io/repos/github/hanakoa/alpaca/badge.svg?branch=master)](https://coveralls.io/github/hanakoa/alpaca?branch=master)
 [![GitHub Release](https://img.shields.io/github/release/hanakoa/alpaca.svg)](https://github.com/hanakoa/alpaca/releases)
 
