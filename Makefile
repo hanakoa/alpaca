@@ -37,11 +37,23 @@ build-mfa:
 
 .PHONY: run-auth
 run-auth:
-	RABBITMQ_ENABLED=false ORIGIN_ALLOWED=http://localhost:3000 DB_PASSWORD=password DB_HOST=localhost ALPACA_SECRET=4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF ./bin/alpaca-auth
+	echo "Starting Auth µService" && \
+  RABBITMQ_ENABLED=false \
+  ORIGIN_ALLOWED=http://localhost:3000 \
+  DB_PASSWORD=password \
+  DB_HOST=localhost \
+  ALPACA_SECRET=4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF \
+  ITERATION_COUNT=10000 \
+  ./bin/alpaca-auth
 
 .PHONY: run-password-reset
 run-password-reset:
-	RABBITMQ_ENABLED=false ORIGIN_ALLOWED=http://localhost:3000 DB_PASSWORD=password DB_HOST=localhost ./bin/alpaca-password-reset
+	echo "Starting Password Reset µService" && \
+  RABBITMQ_ENABLED=false \
+  ORIGIN_ALLOWED=http://localhost:3000 \
+  DB_PASSWORD=password \
+  DB_HOST=localhost \
+  ./bin/alpaca-password-reset
 
 .PHONY: run-mfa
 run-mfa:
@@ -62,6 +74,6 @@ list-users:
 
 .PHONY: create-user
 create-user:
-	http POST localhost:8080/person username="kevin_chen" emailAddress="kevin.chen.bulk@gmail.com"
+	http POST localhost:8080/person username="kevin_chen" email_address="kevin.chen.bulk.test@gmail.com"
 
 include makefiles/*.mk

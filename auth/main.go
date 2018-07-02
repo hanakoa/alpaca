@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/auth/grpc"
-	"github.com/hanakoa/alpaca/auth/models"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
 	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"log"
 	"sync"
 	"time"
+	"github.com/hanakoa/alpaca/auth/models"
 )
 
 func main() {
@@ -37,8 +37,11 @@ func main() {
 	var wg sync.WaitGroup
 
 	snowflakeNode := snowflakeUtils.InitSnowflakeNode(snowflakeNodeNumber)
-	// TODO configurable duration?
-	iterationCount := models.CalibrateIterationCount(time.Millisecond * 1000)
+	iterationCount := envy.IntOr("ITERATION_COUNT", 0)
+	if iterationCount == 0 {
+		iterationCount = models.CalibrateIterationCount(time.Millisecond * 1000)
+	}
+	log.Println("Using iteration count:", iterationCount)
 
 	a := App{RabbitmqEnabled: rabbitmqEnabled, iterationCount: iterationCount}
 	a.mfaClient = mfaGRPC.NewMFAClient(grpcMFAHost, grpcMFAPort)
