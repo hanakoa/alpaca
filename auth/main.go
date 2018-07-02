@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/auth/grpc"
+	"github.com/hanakoa/alpaca/auth/models"
 	mfaGRPC "github.com/hanakoa/alpaca/mfa/grpc"
 	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"log"
 	"sync"
 	"time"
-	"github.com/hanakoa/alpaca/auth/models"
 )
 
 func main() {
