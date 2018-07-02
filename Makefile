@@ -1,3 +1,5 @@
+SERVICES_DIR = ./services
+
 .PHONY: all
 all:
 	@$(MAKE) build
@@ -25,15 +27,15 @@ build:
 
 .PHONY: build-auth
 build-auth:
-	go build -o ./bin/alpaca-auth ./auth
+	go build -o ./bin/alpaca-auth $(SERVICES_DIR)/auth
 
 .PHONY: build-password-reset
 build-password-reset:
-	go build -o ./bin/alpaca-password-reset ./password-reset
+	go build -o ./bin/alpaca-password-reset $(SERVICES_DIR)/password-reset
 
 .PHONY: build-mfa
 build-mfa:
-	go build -o ./bin/alpaca-mfa ./mfa
+	go build -o ./bin/alpaca-mfa $(SERVICES_DIR)/mfa
 
 .PHONY: run-auth
 run-auth:
@@ -61,7 +63,7 @@ run-mfa:
 
 .PHONY: test
 test:
-	go test -v ./auth
+	go test -v $(SERVICES_DIR)/auth
 
 .PHONY: convey
 convey:

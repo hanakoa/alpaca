@@ -73,7 +73,7 @@ jobs:
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
             touch /tmp/coverage.out
-            go test -cover -coverprofile=/tmp/coverage.out -v ./auth | tee ${TEST_RESULTS}/go-test.out
+            go test -cover -coverprofile=/tmp/coverage.out -v ./services/auth | tee ${TEST_RESULTS}/go-test.out
             goveralls -coverprofile=/tmp/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
 
       - run: make build

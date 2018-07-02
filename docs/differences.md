@@ -18,7 +18,7 @@
 
 #### Insanely fast build times!
 ```bash
-$ time go build -o ./bin/alpaca-auth ./auth
+$ time go build -o ./bin/alpaca-auth ./services/auth
 1.52s user 0.59s system 130% cpu 1.618 total
 ```
 
