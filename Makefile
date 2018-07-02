@@ -51,10 +51,6 @@ run-mfa:
 test:
 	go test -v ./auth
 
-.PHONY: circle-test
-circle-test:
-	go test -cover -coverprofile=/home/ubuntu/coverage.out -v ./auth
-
 .PHONY: convey
 convey:
 #	go get github.com/smartystreets/goconvey
