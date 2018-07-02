@@ -1,0 +1,2 @@
+- [ ] vgo #17
+- [ ] set jwt cookie on successful response
