@@ -60,6 +60,7 @@ func main() {
 	wg.Wait()
 }
 
+// TODO will also need to emit a message event so other microservices can have this new Account and EmailAddress
 func seedAdminAccount(db *sql.DB, snowflakeNode *snowflake.Node) {
 	username := envy.StringOr("SEED_ACCOUNT_USERNAME", "")
 	email := envy.StringOr("SEED_ACCOUNT_EMAIL", "")
