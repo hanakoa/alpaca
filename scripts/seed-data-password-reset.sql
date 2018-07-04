@@ -14,8 +14,8 @@ CREATE TABLE password_reset_code (
 CREATE TABLE email_address (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_timestamp timestamp NULL DEFAULT NULL,
   confirmed boolean NOT NULL DEFAULT FALSE,
   is_primary boolean NOT NULL,
   email_address varchar(255) NOT NULL,
@@ -26,8 +26,8 @@ CREATE TABLE email_address (
 CREATE TABLE phone_number (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_timestamp timestamp NULL DEFAULT NULL,
   confirmed boolean NOT NULL DEFAULT FALSE,
   phone_number varchar(255) NOT NULL,
   account_id bigint NOT NULL
@@ -38,8 +38,8 @@ CREATE TABLE phone_number (
 CREATE TABLE account (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_timestamp timestamp NULL DEFAULT NULL,
   disabled boolean NOT NULL DEFAULT FALSE,
   username varchar(25) NOT NULL,
   current_password_id bigint DEFAULT NULL,

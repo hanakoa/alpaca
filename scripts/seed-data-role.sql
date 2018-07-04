@@ -5,8 +5,8 @@ DROP TABLE IF EXISTS role_membership CASCADE;
 CREATE TABLE role (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_timestamp timestamp NULL DEFAULT NULL,
   name varchar(50) NOT NULL
 ) WITH (OIDS=FALSE);
 
@@ -14,8 +14,8 @@ CREATE TABLE role (
 CREATE TABLE role_membership (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_timestamp timestamp NULL DEFAULT NULL,
   account_id bigint NOT NULL,
   role_id bigint NOT NULL,
   expiration_timestamp timestamp NULL DEFAULT NULL
