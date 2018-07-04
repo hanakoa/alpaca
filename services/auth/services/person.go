@@ -103,7 +103,7 @@ func (svc *AccountService) GetAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rabbitmq.Send(svc.AccountSender, "getting account...")
-	setStringsForAccount(&p)
+	setSnowflakeIdStringsForAccount(&p)
 	requestUtils.RespondWithJSON(w, http.StatusOK, p)
 }
 
@@ -202,7 +202,7 @@ func (svc *AccountService) CreateAccount(w http.ResponseWriter, r *http.Request)
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		setStringsForAccount(p)
+		setSnowflakeIdStringsForAccount(p)
 		rabbitmq.Send(svc.AccountSender, "created account")
 		requestUtils.RespondWithJSON(w, http.StatusCreated, p)
 	}
@@ -260,7 +260,7 @@ func (svc *AccountService) UpdateAccount(w http.ResponseWriter, r *http.Request)
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		setStringsForAccount(&p)
+		setSnowflakeIdStringsForAccount(&p)
 		rabbitmq.Send(svc.AccountSender, "updated account")
 		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
@@ -296,13 +296,13 @@ func (svc *AccountService) DeleteAccount(w http.ResponseWriter, r *http.Request)
 	if err := tx.Commit(); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
-		setStringsForAccount(&p)
+		setSnowflakeIdStringsForAccount(&p)
 		rabbitmq.Send(svc.AccountSender, "deleted account")
 		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
 
-func setStringsForAccount(p *models.Account) {
+func setSnowflakeIdStringsForAccount(p *models.Account) {
 	p.IdStr = strconv.FormatInt(p.Id, 10)
 	// TODO PrimaryEmailAddressID should not be nullable (because email#accountId is not-nullable)
 	p.PrimaryEmailAddressIdStr = strconv.FormatInt(p.PrimaryEmailAddressID.Int64, 10)

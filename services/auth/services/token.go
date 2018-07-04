@@ -8,7 +8,6 @@ import (
 	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	mfaGRPC "github.com/hanakoa/alpaca/services/mfa/grpc"
 	"encoding/json"
-	"gopkg.in/guregu/null.v3"
 	"strings"
 	"time"
 	"github.com/hanakoa/alpaca/services/auth/models"
@@ -68,8 +67,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 			requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
 			return
 		}
-		account = &models.Account{Username: null.StringFrom(username)}
-		err = account.GetAccountByUsername(svc.DB)
+		account, err = models.GetAccountByUsername(svc.DB, username)
 	}
 
 	if err != nil {

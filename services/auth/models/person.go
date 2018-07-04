@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/golang-sql/sqlexp"
 	"context"
+	"database/sql"
 )
 
 type Account struct {
@@ -24,20 +25,25 @@ type Account struct {
 	PrimaryEmailAddressIdStr string      `json:"primary_email_address_id_str"`
 }
 
-func (p *Account) GetAccountByUsername(q sqlexp.Querier) error {
-	return q.QueryRowContext(
+func GetAccountByUsername(q sqlexp.Querier, username string) (*Account, error) {
+	p := &Account{}
+	err := q.QueryRowContext(
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, "+
 			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id "+
 			"FROM Account p "+
 			"WHERE p.username=$1 " +
-			"AND p.deleted_timestamp IS NULL", p.Username).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified, &p.Disabled,
+			"AND p.deleted_timestamp IS NULL", username).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified, &p.Disabled,
 				&p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID, &p.PrimaryEmailAddressID)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+	return p, err
 }
 
 func GetAccountByEmailAddress(q sqlexp.Querier, emailAddress string) (*Account, error) {
 	p := &Account{}
-	return p, q.QueryRowContext(
+	err := q.QueryRowContext(
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, "+
 			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id " +
@@ -46,11 +52,15 @@ func GetAccountByEmailAddress(q sqlexp.Querier, emailAddress string) (*Account, 
 			"AND p.deleted_timestamp IS NULL", emailAddress).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
 				&p.Disabled, &p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID,
 					&p.PrimaryEmailAddressID)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+	return p, err
 }
 
 func GetAccountByPhoneNumber(q sqlexp.Querier, phoneNumber string) (*Account, error) {
 	p := &Account{}
-	return p, q.QueryRowContext(
+	err := q.QueryRowContext(
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.deleted_timestamp, p.last_modified_timestamp, p.disabled, "+
 			"p.multi_factor_required, p.username, p.current_password_id, p.primary_email_address_id " +
@@ -59,6 +69,10 @@ func GetAccountByPhoneNumber(q sqlexp.Querier, phoneNumber string) (*Account, er
 			"AND p.deleted_timestamp IS NULL", phoneNumber).Scan(&p.Id, &p.Created, &p.Deleted, &p.LastModified,
 		&p.Disabled, &p.MultiFactorRequired, &p.Username, &p.CurrentPasswordID,
 		&p.PrimaryEmailAddressID)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+	return p, err
 }
 
 func (p *Account) GetDeletedAccount(q sqlexp.Querier) error {
@@ -161,6 +175,13 @@ func (p *Account) Exists(q sqlexp.Querier) (bool, error) {
 func (p *Account) Count(q sqlexp.Querier) (int, error) {
 	var count int
 	row := q.QueryRowContext(context.TODO(), "SELECT COUNT(*) AS count FROM Account WHERE id=$1 AND deleted_timestamp IS NULL", p.Id)
+	err := row.Scan(&count)
+	return count, err
+}
+
+func TotalAccountCount(q sqlexp.Querier) (int, error) {
+	var count int
+	row := q.QueryRowContext(context.TODO(), "SELECT COUNT(*) AS count FROM Account")
 	err := row.Scan(&count)
 	return count, err
 }
