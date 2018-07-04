@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/TeslaGov/envy"
-	"github.com/hanakoa/alpaca/services/mfa/grpc"
+	mfaGRPC "github.com/hanakoa/alpaca/services/mfa/grpc"
 	"github.com/hanakoa/alpaca/services/mfa/services"
 	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"github.com/sfreiberg/gotwilio"
@@ -48,7 +48,7 @@ func main() {
 	go a.ServeRest(fmt.Sprintf(":%d", port), origin)
 
 	wg.Add(1)
-	grpcServer := &grpc.GrpcServer{
+	grpcServer := &mfaGRPC.GrpcServer{
 		Port:          grpcPort,
 		DB:            db,
 		TwilioService: twilioService}

@@ -14,7 +14,7 @@ docker:
 docker-build:
 	for svc in $(SERVICES); do \
 		echo Building image for $$svc; \
-		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $$svc/Dockerfile . ; \
+		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $(SERVICES_DIR)/$$svc/Dockerfile . ; \
 	done
 	docker-compose build
 
@@ -22,7 +22,7 @@ docker-build:
 docker-rebuild:
 	for svc in $(SERVICES); do \
 		echo Rebuilding image for $$svc; \
-		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $$svc/Dockerfile . --no-cache ; \
+		docker image build -t $(DOCKER_ORG)/alpaca-$$svc-api:$(DOCKER_IMAGE_VERSION) -t $(DOCKER_ORG)/alpaca-$$svc-api:latest -f $(SERVICES_DIR)/$$svc/Dockerfile . --no-cache ; \
 	done
 	docker-compose build
 

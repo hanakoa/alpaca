@@ -63,7 +63,8 @@ run-mfa:
 
 .PHONY: test
 test:
-	go test -v $(SERVICES_DIR)/auth
+	cd ${GOPATH}/src/github.com/hanakoa/alpaca/$(SERVICES_DIR)/auth && vgo test -v .
+	cd ${GOPATH}/src/github.com/hanakoa/alpaca/$(SERVICES_DIR)/password-reset && pwd
 
 .PHONY: convey
 convey:
