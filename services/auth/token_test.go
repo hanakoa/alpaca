@@ -16,7 +16,7 @@ func TestLogin(t *testing.T) {
 		users := AddUsers(1)
 
 		payload := []byte(`{"password":"potato-tomato-cherry-gun"}`)
-		req, err := http.NewRequest("PUT", fmt.Sprintf("/person/%d/password", users[0].Id), bytes.NewBuffer(payload))
+		req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%d/password", users[0].Id), bytes.NewBuffer(payload))
 		So(err, ShouldBeNil)
 		response := ExecuteRequest(req)
 		So(response.Code, ShouldEqual, http.StatusOK)

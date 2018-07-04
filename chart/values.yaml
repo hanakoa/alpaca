@@ -18,4 +18,4 @@ rabbitmqEnabled: false
 rabbitmqUsername: guest
 rabbitmqPassword: guest
 rabbitmqVirtualHost: '/'
-rabbitmqRoutingKey: 'person.#'
+rabbitmqRoutingKey: 'account.#'

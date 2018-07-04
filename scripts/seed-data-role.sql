@@ -16,7 +16,7 @@ CREATE TABLE role_membership (
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_timestamp timestamp NULL DEFAULT NULL,
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  person_id bigint NOT NULL,
+  account_id bigint NOT NULL,
   role_id bigint NOT NULL,
   expiration_timestamp timestamp NULL DEFAULT NULL
 ) WITH (OIDS=FALSE);
@@ -27,5 +27,5 @@ FOREIGN KEY (role_id)
 REFERENCES role(id);
 
 CREATE INDEX role_name_idx ON role (name);
-CREATE INDEX role_membership_person_id_idx ON role_membership (person_id);
+CREATE INDEX role_membership_account_id_idx ON role_membership (account_id);
 CREATE INDEX role_membership_role_id_idx ON role_membership (role_id);

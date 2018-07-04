@@ -9,16 +9,16 @@ import (
 type EmailAddress struct {
 	ID           int64  `json:"id"`
 	EmailAddress string `json:"email_address"`
-	PersonID     int64  `json:"person_id"`
+	AccountID     int64  `json:"account_id"`
 }
 
 func (e *EmailAddress) GetConfirmedEmailAddress(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
-		"SELECT email_address, person_id "+
+		"SELECT email_address, account_id "+
 			"FROM email_address WHERE email_address=$1 " +
 			"AND confirmed=$2 "+
-			"AND deleted_timestamp IS NULL", e.EmailAddress, true).Scan(&e.EmailAddress, &e.PersonID)
+			"AND deleted_timestamp IS NULL", e.EmailAddress, true).Scan(&e.EmailAddress, &e.AccountID)
 }
 
 func (e *EmailAddress) getMaskedEmailUser() string {
@@ -43,14 +43,14 @@ func (e *EmailAddress) MaskValue() {
 	e.EmailAddress = e.getMaskedEmailUser() + "@" + e.getMaskedEmailHost()
 }
 
-func GetEmailAddressesForPerson(personID int64, q sqlexp.Querier) ([]EmailAddress, error) {
+func GetEmailAddressesForAccount(accountID int64, q sqlexp.Querier) ([]EmailAddress, error) {
 	rows, err := q.QueryContext(
 		context.TODO(),
-		"SELECT id, email_address, person_id "+
+		"SELECT id, email_address, account_id "+
 			"FROM email_address " +
-			"WHERE confirmed=$1 AND person_id=$2 "+
+			"WHERE confirmed=$1 AND account_id=$2 "+
 			"AND deleted_timestamp IS NULL",
-		true, personID)
+		true, accountID)
 
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func GetEmailAddressesForPerson(personID int64, q sqlexp.Querier) ([]EmailAddres
 
 	for rows.Next() {
 		var e EmailAddress
-		if err := rows.Scan(&e.ID, &e.EmailAddress, &e.PersonID); err != nil {
+		if err := rows.Scan(&e.ID, &e.EmailAddress, &e.AccountID); err != nil {
 			return nil, err
 		}
 		e.MaskValue()

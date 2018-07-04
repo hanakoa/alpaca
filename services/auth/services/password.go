@@ -23,33 +23,33 @@ type PasswordService struct {
 	IterationCount int
 }
 
-func (svc *PasswordService) UpdatePasswordHelper(tx *sql.Tx, p *models.Password, personId int64) (int, error) {
-	person := &models.Person{Id: personId}
-	if exists, err := person.Exists(tx); err != nil {
+func (svc *PasswordService) UpdatePasswordHelper(tx *sql.Tx, p *models.Password, accountId int64) (int, error) {
+	account := &models.Account{Id: accountId}
+	if exists, err := account.Exists(tx); err != nil {
 		return http.StatusNotFound, err
 	} else if !exists {
-		return http.StatusNotFound, errors.New("Person does not exist")
+		return http.StatusNotFound, errors.New("Account does not exist")
 	}
 
-	// Load the person's current password
-	if err := person.GetPerson(tx); err != nil {
+	// Load the account's current password
+	if err := account.GetAccount(tx); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	// Set the password's personId
-	p.PersonID = personId
+	// Set the password's accountId
+	p.AccountID = accountId
 
-	if person.CurrentPasswordID.Valid {
-		log.Println("Person already has a password... Updating it...")
+	if account.CurrentPasswordID.Valid {
+		log.Println("Account already has a password... Updating it...")
 		if err := p.UpdatePassword(tx); err != nil {
 			return http.StatusInternalServerError, err
 		}
 	} else {
-		log.Println("Person does not have a password... Creating one...")
+		log.Println("Account does not have a password... Creating one...")
 		// TODO add more user info (e.g., name, email) to slice argument
 		// The userInputs argument is an splice of strings that zxcvbn will add to its internal dictionary.
 		// This can be whatever list of strings you like, but is meant for user inputs from other fields
-		// of the form, like name and email. That way a password that includes the user's personal info
+		// of the form, like name and email. That way a password that includes the user's info
 		// can be heavily penalized.
 		minEntropyMatch := zxcvbn.PasswordStrength(p.PasswordText.String, []string {"alpaca"})
 		if minEntropyMatch.Score < 2 {
@@ -62,9 +62,9 @@ func (svc *PasswordService) UpdatePasswordHelper(tx *sql.Tx, p *models.Password,
 	}
 
 	// Get password so we populate fields
-	p.GetPasswordForPersonID(tx)
+	p.GetPasswordForAccountID(tx)
 
-	if err := person.UpdateCurrentPassword(tx, p.Id); err != nil {
+	if err := account.UpdateCurrentPassword(tx, p.Id); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
@@ -73,7 +73,7 @@ func (svc *PasswordService) UpdatePasswordHelper(tx *sql.Tx, p *models.Password,
 
 func (svc *PasswordService) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	personId, ok := requestUtils.GetInt64(w, vars, "personId")
+	accountId, ok := requestUtils.GetInt64(w, vars, "accountId")
 	if !ok {
 		return
 	}
@@ -101,7 +101,7 @@ func (svc *PasswordService) UpdatePassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if statusCode, err := svc.UpdatePasswordHelper(tx, &p, personId); err != nil {
+	if statusCode, err := svc.UpdatePasswordHelper(tx, &p, accountId); err != nil {
 		tx.Rollback()
 		requestUtils.RespondWithError(w, statusCode, err.Error())
 		return
@@ -116,7 +116,7 @@ func (svc *PasswordService) UpdatePassword(w http.ResponseWriter, r *http.Reques
 		p.PasswordHash = nil
 		p.PasswordText = null.StringFrom("")
 		p.IdStr = strconv.FormatInt(p.Id, 10)
-		p.PersonIdStr = strconv.FormatInt(p.PersonID, 10)
+		p.AccountIdStr = strconv.FormatInt(p.AccountID, 10)
 		p.IterationCount = 0
 		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}

@@ -48,7 +48,7 @@ func (service *GrpcServer) Send2FACode(ctx context.Context, in *pb.Send2FACodeRe
 			Expiration: time.Now().Add(time.Minute * 30),
 			Usable:     true,
 			Used:       false,
-			PersonID:   in.PersonId}
+			AccountID:   in.AccountId}
 	}
 
 	if tx, err := service.DB.Begin(); err != nil {
@@ -64,7 +64,7 @@ func (service *GrpcServer) Send2FACode(ctx context.Context, in *pb.Send2FACodeRe
 		}
 	}
 
-	return &pb.Send2FACodeResponse{ResetCode: in.ResetCode, PersonId: in.PersonId}, nil
+	return &pb.Send2FACodeResponse{ResetCode: in.ResetCode, AccountId: in.AccountId}, nil
 }
 
 func (service *GrpcServer) Run() {

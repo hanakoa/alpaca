@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type AuthClient = pb.PersonServiceClient
+type AuthClient = pb.AccountServiceClient
 type PassClient = pb.ResetPasswordServiceClient
 
 func NewPassClient(host string, port int) PassClient {
@@ -16,19 +16,19 @@ func NewPassClient(host string, port int) PassClient {
 	return pb.NewResetPasswordServiceClient(conn)
 }
 
-func GetPersonIDForEmailAddress(client AuthClient, emailAddress string) (int64, error) {
-	request := &pb.GetPersonRequest{EmailAddress: emailAddress}
-	if response, err := client.GetPerson(context.Background(), request); err != nil {
+func GetAccountIDForEmailAddress(client AuthClient, emailAddress string) (int64, error) {
+	request := &pb.GetAccountRequest{EmailAddress: emailAddress}
+	if response, err := client.GetAccount(context.Background(), request); err != nil {
 		return 0, err
 	} else {
-		return response.PersonId, nil
+		return response.AccountId, nil
 	}
 }
 
-func ResetPassword(client PassClient, personID int64, newPassword string) error {
+func ResetPassword(client PassClient, accountID int64, newPassword string) error {
 	// We allow nil clients so that unit tests can pass nil to effectively disable gRPC.
 	if client != nil {
-		request := &pb.ResetPasswordRequest{PersonId: personID, NewPassword: newPassword}
+		request := &pb.ResetPasswordRequest{AccountId: accountID, NewPassword: newPassword}
 		_, err := client.ResetPassword(context.Background(), request)
 		return err
 	}

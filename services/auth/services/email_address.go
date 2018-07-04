@@ -46,7 +46,7 @@ func NewEmailAddressService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqE
 func setStringsForEmailAddress(e *models.EmailAddress) {
 	e.IdStr = strconv.FormatInt(e.ID, 10)
 	// TODO PrimaryEmailAddressID should not be nullable
-	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
+	e.AccountIdStr = strconv.FormatInt(e.AccountID, 10)
 }
 
 // TODO only admins can call this endpoint
@@ -99,7 +99,7 @@ func (svc *EmailAddressService) GetEmailAddress(w http.ResponseWriter, r *http.R
 	requestUtils.RespondWithJSON(w, http.StatusOK, e)
 }
 
-// TODO only admins can create, unless person is you
+// TODO only admins can create, unless account is you
 func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *http.Request) {
 	var e models.EmailAddress
 	decoder := json.NewDecoder(r.Body)
@@ -142,8 +142,8 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if e.PersonID == 0 {
-		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address must have person ID.")
+	if e.AccountID == 0 {
+		requestUtils.RespondWithError(w, http.StatusBadRequest, "Email address must have account ID.")
 		return
 	}
 
@@ -157,20 +157,20 @@ func (svc *EmailAddressService) CreateEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 
-	p := &models.Person{Id: e.PersonID}
+	p := &models.Account{Id: e.AccountID}
 	if exists, err := p.Exists(tx); err != nil {
 		tx.Rollback()
 		requestUtils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if !exists {
 		tx.Rollback()
-		requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No person found for person ID: %d", e.PersonID))
+		requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("No account found for account ID: %d", e.AccountID))
 		return
 	}
 
 	e.ID = snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
 	e.IdStr = strconv.FormatInt(e.ID, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
+	e.AccountIdStr = strconv.FormatInt(e.AccountID, 10)
 	if err := e.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
@@ -232,7 +232,7 @@ func (svc *EmailAddressService) UpdateEmailAddress(w http.ResponseWriter, r *htt
 	}
 
 	e.IdStr = strconv.FormatInt(e.ID, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
+	e.AccountIdStr = strconv.FormatInt(e.AccountID, 10)
 
 	if err := tx.Commit(); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -294,7 +294,7 @@ func (svc *EmailAddressService) DeleteEmailAddress(w http.ResponseWriter, r *htt
 		return
 	}
 	e.IdStr = strconv.FormatInt(e.ID, 10)
-	e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
+	e.AccountIdStr = strconv.FormatInt(e.AccountID, 10)
 
 	if err := tx.Commit(); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())

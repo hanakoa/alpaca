@@ -22,8 +22,8 @@ type Password struct {
 	IterationCount int
 	Salt           []byte
 	PasswordHash   []byte
-	PersonID       int64       `json:"person_id"`
-	PersonIdStr    string      `json:"person_id_str"`
+	AccountID       int64       `json:"account_id"`
+	AccountIdStr    string      `json:"account_id_str"`
 	PasswordText   null.String `json:"password"`
 }
 
@@ -81,14 +81,14 @@ func CalibrateIterationCount(hashTime time.Duration) int {
 	return iterationCount
 }
 
-func (p *Password) GetPasswordForPersonID(q sqlexp.Querier) error {
+func (p *Password) GetPasswordForAccountID(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
 		"SELECT p.id, p.created_timestamp, p.iteration_count, p.salt, " +
-			"p.password_hash, p.person_id "+
+			"p.password_hash, p.account_id "+
 			"FROM Password p "+
 			"WHERE p.id=$1", p.Id).Scan(&p.Id, &p.Created, &p.IterationCount, &p.Salt, &p.PasswordHash,
-		&p.PersonID)
+		&p.AccountID)
 }
 
 func (p *Password) CreatePassword(q sqlexp.Querier, iterationCount int) error {
@@ -102,8 +102,8 @@ func (p *Password) CreatePassword(q sqlexp.Querier, iterationCount int) error {
 	passwordHash = GenerateHash(p.PasswordText.String, iterationCount, salt)
 	_, err = q.ExecContext(
 		context.TODO(),
-		"INSERT INTO Password(id, created_timestamp, iteration_count, salt, password_hash, person_id) VALUES($1, $2, $3, $4, $5, $6)",
-		p.Id, now, iterationCount, salt, passwordHash, p.PersonID)
+		"INSERT INTO Password(id, created_timestamp, iteration_count, salt, password_hash, account_id) VALUES($1, $2, $3, $4, $5, $6)",
+		p.Id, now, iterationCount, salt, passwordHash, p.AccountID)
 
 	return err
 }

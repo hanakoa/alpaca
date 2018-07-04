@@ -5,12 +5,12 @@ It manages user credentials (username, email, phone number)
 ## Using the API
 ### Creating a user
 ```bash
-http POST localhost:8080/person username="kevin_chen" email_address="kevin.chen.bulk@gmail.com"
+http POST localhost:8080/account username="kevin_chen" email_address="kevin.chen.bulk@gmail.com"
 ```
 
 ### Set password
 ```bash
-http PUT localhost:8080/person/970480225798328320/password password="MyPassword123Is-Super-Secure"
+http PUT localhost:8080/account/970480225798328320/password password="MyPassword123Is-Super-Secure"
 ```
 
 ### Logging in

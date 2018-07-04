@@ -33,7 +33,7 @@ Here's the [original RFC](https://gist.github.com/hanakoa/6614b0799f09144ef348b3
 that about decomposing the original monolith.
 
 Microservices lead to 
-- independent development (easier to onboard people, less surface area for stuff to go wrong)
+- independent development (easier to onboard developers, less surface area for stuff to go wrong)
 - independent deployment (no need to bring everything down to update one thing)
 - independent scaling (e.g., the CPU-intensive password hashing service need not be tethered to everything else)
 
@@ -49,11 +49,11 @@ Microservices lead to
 - Better varchar constraints: 50 for names (see Facebook), 25 for usernames (compromise between Github's 39 and Twitter's 15).
 
 ### Security Updates
-- Salt is stored on Password, not Person, per [OWASP](https://www.owasp.org/index.php/Password_Storage_Cheat_Sheet#Use_a_cryptographically_strong_credential-specific_salt).
+- Salt is stored on Password, not Account, per [OWASP](https://www.owasp.org/index.php/Password_Storage_Cheat_Sheet#Use_a_cryptographically_strong_credential-specific_salt).
   - "Generate a unique salt upon creation of each stored credential (not just per user or system wide)"
 - Dropping [LUDS](https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/wheeler)
 in favor of password complexity, with Dropbox's [zxcvbn](https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation/).
-- Passwords and people no longer expire.
+- Passwords and accounts no longer expire.
 - Self-calibrating iteration count. App will determine how many password hash 
 iterations it must perform such that hashing takes roughly a second, or some other given value.
 

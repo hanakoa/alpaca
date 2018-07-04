@@ -24,32 +24,32 @@ type EmailAddress struct {
 	Confirmed    bool      `json:"confirmed"`
 	Primary      bool      `json:"primary"`
 	EmailAddress string    `json:"email_address"`
-	PersonID     int64     `json:"person_id"`
-	PersonIdStr  string    `json:"person_id_str"`
+	AccountID     int64     `json:"account_id"`
+	AccountIdStr  string    `json:"account_id_str"`
 }
 
 func (e *EmailAddress) GetEmailAddressByEmailAddress(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
-		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, is_primary, email_address, person_id "+
+		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, is_primary, email_address, account_id "+
 			"FROM email_address WHERE email_address=$1 "+
-			"AND deleted_timestamp IS NULL", e.EmailAddress).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.Primary, &e.EmailAddress, &e.PersonID)
+			"AND deleted_timestamp IS NULL", e.EmailAddress).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.Primary, &e.EmailAddress, &e.AccountID)
 }
 
 func (e *EmailAddress) GetEmailAddress(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
-		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, is_primary, email_address, person_id " +
+		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, is_primary, email_address, account_id " +
 			"FROM email_address WHERE id=$1 " +
-			"AND deleted_timestamp IS NULL", e.ID).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.Primary, &e.EmailAddress, &e.PersonID)
+			"AND deleted_timestamp IS NULL", e.ID).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.Primary, &e.EmailAddress, &e.AccountID)
 }
 
 func (e *EmailAddress) GetDeletedEmailAddress(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
-		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, email_address, person_id " +
+		"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, email_address, account_id " +
 			"FROM email_address WHERE id=$1 " +
-			"AND deleted_timestamp IS NOT NULL", e.ID).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.EmailAddress, &e.PersonID)
+			"AND deleted_timestamp IS NOT NULL", e.ID).Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.EmailAddress, &e.AccountID)
 }
 
 // UpdateEmailAddress updates only the confirmation status of an email address.
@@ -69,8 +69,8 @@ func (e *EmailAddress) DeleteEmailAddress(q sqlexp.Querier) error {
 func (e *EmailAddress) CreateEmailAddress(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"INSERT INTO email_address(id, person_id, email_address, confirmed, is_primary) VALUES($1, $2, $3, $4, $5)",
-		e.ID, e.PersonID, e.EmailAddress, e.Confirmed, e.Primary)
+		"INSERT INTO email_address(id, account_id, email_address, confirmed, is_primary) VALUES($1, $2, $3, $4, $5)",
+		e.ID, e.AccountID, e.EmailAddress, e.Confirmed, e.Primary)
 
 	return err
 }
@@ -79,7 +79,7 @@ func GetEmailAddresses(q sqlexp.Querier, cursor int64, sort string, count int) (
 	rows, err := q.QueryContext(
 		context.TODO(),
 		fmt.Sprintf(
-			"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, email_address, person_id "+
+			"SELECT id, created_timestamp, deleted_timestamp, last_modified_timestamp, confirmed, email_address, account_id "+
 				"FROM email_address " +
 				"WHERE id > $1 " +
 				"AND deleted_timestamp IS NULL " +
@@ -96,11 +96,11 @@ func GetEmailAddresses(q sqlexp.Querier, cursor int64, sort string, count int) (
 
 	for rows.Next() {
 		var e EmailAddress
-		if err := rows.Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.EmailAddress, &e.PersonID); err != nil {
+		if err := rows.Scan(&e.ID, &e.Created, &e.Deleted, &e.LastModified, &e.Confirmed, &e.EmailAddress, &e.AccountID); err != nil {
 			return nil, err
 		}
 		e.IdStr = strconv.FormatInt(e.ID, 10)
-		e.PersonIdStr = strconv.FormatInt(e.PersonID, 10)
+		e.AccountIdStr = strconv.FormatInt(e.AccountID, 10)
 		emailAddresses = append(emailAddresses, e)
 	}
 
@@ -138,14 +138,14 @@ func (e *EmailAddress) Count(q sqlexp.Querier) (int, error) {
 	return count, err
 }
 
-func GetEmailAddressesForPerson(personID int64, q sqlexp.Querier) ([]EmailAddress, error) {
+func GetEmailAddressesForAccount(accountID int64, q sqlexp.Querier) ([]EmailAddress, error) {
 	rows, err := q.QueryContext(
 		context.TODO(),
-		"SELECT id, email_address, person_id "+
+		"SELECT id, email_address, account_id "+
 			"FROM email_address " +
-			"WHERE confirmed=$1 AND person_id=$2 "+
+			"WHERE confirmed=$1 AND account_id=$2 "+
 			"AND deleted_timestamp IS NULL",
-		true, personID)
+		true, accountID)
 
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func GetEmailAddressesForPerson(personID int64, q sqlexp.Querier) ([]EmailAddres
 
 	for rows.Next() {
 		var e EmailAddress
-		if err := rows.Scan(&e.ID, &e.EmailAddress, &e.PersonID); err != nil {
+		if err := rows.Scan(&e.ID, &e.EmailAddress, &e.AccountID); err != nil {
 			return nil, err
 		}
 		e.MaskValue()
@@ -170,10 +170,10 @@ func GetEmailAddressesForPerson(personID int64, q sqlexp.Querier) ([]EmailAddres
 func (e *EmailAddress) GetConfirmedEmailAddress(q sqlexp.Querier) error {
 	return q.QueryRowContext(
 		context.TODO(),
-		"SELECT email_address, person_id "+
+		"SELECT email_address, account_id "+
 			"FROM email_address WHERE email_address=$1 " +
 			"AND confirmed=$2 "+
-			"AND deleted_timestamp IS NULL", e.EmailAddress, true).Scan(&e.EmailAddress, &e.PersonID)
+			"AND deleted_timestamp IS NULL", e.EmailAddress, true).Scan(&e.EmailAddress, &e.AccountID)
 }
 
 func (e *EmailAddress) MaskValue() {

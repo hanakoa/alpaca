@@ -2,25 +2,25 @@ syntax = "proto3";
 
 package proto;
 
-message GetPersonRequest {
+message GetAccountRequest {
     string emailAddress = 1;
 }
 
-message GetPersonResponse {
-    int64 personId = 1;
+message GetAccountResponse {
+    int64 accountId = 1;
 }
 
-service PersonService {
-    rpc GetPerson (GetPersonRequest) returns (GetPersonResponse) {}
+service AccountService {
+    rpc GetAccount (GetAccountRequest) returns (GetAccountResponse) {}
 }
 
 message ResetPasswordRequest {
-    int64 personId = 1;
+    int64 accountId = 1;
     string newPassword = 2;
 }
 
 message ResetPasswordResponse {
-    int64 personId = 1;
+    int64 accountId = 1;
 }
 
 service ResetPasswordService {

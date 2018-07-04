@@ -45,14 +45,14 @@ func GetInt64(m map[string]interface{}, key string) int64 {
 }
 
 func ClearTable() {
-	MyApp.DB.Exec("UPDATE person SET primary_email_address_id = NULL")
-	MyApp.DB.Exec("UPDATE person SET current_password_id = NULL")
-	MyApp.DB.Exec("UPDATE email_address SET person_id = NULL")
-	MyApp.DB.Exec("UPDATE phone_number SET person_id = NULL")
+	MyApp.DB.Exec("UPDATE account SET primary_email_address_id = NULL")
+	MyApp.DB.Exec("UPDATE account SET current_password_id = NULL")
+	MyApp.DB.Exec("UPDATE email_address SET account_id = NULL")
+	MyApp.DB.Exec("UPDATE phone_number SET account_id = NULL")
 	MyApp.DB.Exec("DELETE FROM email_address")
 	MyApp.DB.Exec("DELETE FROM login_attempt")
 	MyApp.DB.Exec("DELETE FROM password")
-	MyApp.DB.Exec("DELETE FROM person")
+	MyApp.DB.Exec("DELETE FROM account")
 	MyApp.DB.Exec("DELETE FROM phone_number")
 }
 
@@ -81,14 +81,14 @@ func ExecuteRequest(req *http.Request) *httptest.ResponseRecorder {
 	return rr
 }
 
-func AddUsers(count int) []models.Person {
+func AddUsers(count int) []models.Account {
 	if count < 1 {
 		count = 1
 	}
 
-	users := []models.Person{}
+	users := []models.Account{}
 	for i := 1; i <= count; i++ {
-		user := &services.CreatePersonRequest{
+		user := &services.CreateAccountRequest{
 			Username:     null.StringFrom(fmt.Sprintf("user%d", i)),
 			EmailAddress: fmt.Sprintf("user%d@gmail.com", i)}
 		b, err := json.Marshal(user)
@@ -96,18 +96,18 @@ func AddUsers(count int) []models.Person {
 			panic(err)
 		}
 
-		req, err := http.NewRequest("POST", "/person", bytes.NewBuffer(b))
+		req, err := http.NewRequest("POST", "/account", bytes.NewBuffer(b))
 		if err != nil {
 			panic(err)
 		}
 		res := ExecuteRequest(req)
-		var p models.Person
+		var p models.Account
 		decoder := json.NewDecoder(res.Body)
 		if err := decoder.Decode(&p); err != nil {
 			panic(err)
 		}
 		if p.Id == 0 {
-			panic(fmt.Errorf("POST /person failed: %s", res.Body))
+			panic(fmt.Errorf("POST /account failed: %s", res.Body))
 		}
 		users = append(users, p)
 	}

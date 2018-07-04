@@ -27,13 +27,13 @@ const (
 	MaxUsernameLength = 25
 )
 
-type PersonService struct {
+type AccountService struct {
 	DB     *sql.DB
 	SnowflakeNode *snowflake.Node
-	PersonSender rabbitmq.Sender
+	AccountSender rabbitmq.Sender
 }
 
-type CreatePersonRequest struct {
+type CreateAccountRequest struct {
 	EmailAddress string      `json:"email_address"`
 	Username     null.String `json:"username"`
 }
@@ -45,72 +45,72 @@ func (l LogSender) Send(i interface{}) {
 	log.Println("Sending message: " + i.(string))
 }
 
-func NewPersonService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled bool) PersonService {
-	svc := PersonService{DB: db, SnowflakeNode: snowflakeNode, PersonSender: nil}
+func NewAccountService(db *sql.DB, snowflakeNode *snowflake.Node, rabbitmqEnabled bool) AccountService {
+	svc := AccountService{DB: db, SnowflakeNode: snowflakeNode, AccountSender: nil}
 	if rabbitmqEnabled {
-		svc.PersonSender = rabbitmq.NewRabbitSender("alpaca-auth-exchange", "person.#")
+		svc.AccountSender = rabbitmq.NewRabbitSender("alpaca-auth-exchange", "account.#")
 	} else {
-		svc.PersonSender = LogSender{}
+		svc.AccountSender = LogSender{}
 	}
 	return svc
 }
 
 // TODO only admins can call this endpoint
-func (svc *PersonService) GetPersons(w http.ResponseWriter, r *http.Request) {
+func (svc *AccountService) GetAccounts(w http.ResponseWriter, r *http.Request) {
 	count := cursor.GetCount(r, DefaultPageSize, MaxPageSize)
 	c := cursor.GetCursor(r)
 	sort := cursor.GetSort(r)
 
-	people, err := models.GetPersons(svc.DB, int64(c), sort, count)
+	accounts, err := models.GetAccounts(svc.DB, int64(c), sort, count)
 	if err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	var response interface{}
-	if len(people) != 0 {
-		var data = make([]interface{}, len(people))
-		for i, p := range people {
+	if len(accounts) != 0 {
+		var data = make([]interface{}, len(accounts))
+		for i, p := range accounts {
 			data[i] = p
 		}
 
-		lastId := people[len(people)-1].Id
+		lastId := accounts[len(accounts)-1].Id
 		response = cursor.MakePage(count, data, c, int(lastId))
 	} else {
 		response = cursor.EmptyPage()
 	}
 	requestUtils.RespondWithJSON(w, http.StatusOK, response)
-	rabbitmq.Send(svc.PersonSender, "Getting people...")
+	rabbitmq.Send(svc.AccountSender, "Getting accounts...")
 }
 
-func (svc *PersonService) GetPerson(w http.ResponseWriter, r *http.Request) {
+func (svc *AccountService) GetAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := requestUtils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "accountId")
 	if !ok {
 		return
 	}
 
-	log.Printf("Looking up person: %d\n", id)
-	p := models.Person{Id: id}
-	if err := p.GetPerson(svc.DB); err != nil {
+	log.Printf("Looking up account: %d\n", id)
+	p := models.Account{Id: id}
+	if err := p.GetAccount(svc.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			requestUtils.RespondWithError(w, http.StatusNotFound, "Person not found")
+			requestUtils.RespondWithError(w, http.StatusNotFound, "Account not found")
 		default:
 			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 
-	rabbitmq.Send(svc.PersonSender, "getting person...")
-	setStringsForPerson(&p)
+	rabbitmq.Send(svc.AccountSender, "getting account...")
+	setStringsForAccount(&p)
 	requestUtils.RespondWithJSON(w, http.StatusOK, p)
 }
 
 // TODO only admins can create
-func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
-	p := &models.Person{}
-	var req CreatePersonRequest
+func (svc *AccountService) CreateAccount(w http.ResponseWriter, r *http.Request) {
+	p := &models.Account{}
+	var req CreateAccountRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&req); err != nil {
 		log.Println("Invalid request payload")
@@ -170,17 +170,17 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	personId := snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
-	p.Id = personId
-	if err := p.CreatePerson(tx); err != nil {
+	accountId := snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
+	p.Id = accountId
+	if err := p.CreateAccount(tx); err != nil {
 		tx.Rollback()
-		log.Printf("Could not create person: %s", err.Error())
+		log.Printf("Could not create account: %s", err.Error())
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	emailAddressId := snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode)
-	emailAddress := &models.EmailAddress{ID: emailAddressId, Primary: true, EmailAddress: req.EmailAddress, PersonID: p.Id}
+	emailAddress := &models.EmailAddress{ID: emailAddressId, Primary: true, EmailAddress: req.EmailAddress, AccountID: p.Id}
 	if err := emailAddress.CreateEmailAddress(tx); err != nil {
 		tx.Rollback()
 		log.Println("Could not create email address")
@@ -188,35 +188,34 @@ func (svc *PersonService) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Created email address %d for person %d\n", emailAddress.ID, p.Id)
+	log.Printf("Created email address %d for account %d\n", emailAddress.ID, p.Id)
 
 	p.PrimaryEmailAddressID = null.IntFrom(emailAddressId)
-	if err := p.UpdatePerson(tx); err != nil {
+	if err := p.UpdateAccount(tx); err != nil {
 		tx.Rollback()
-		log.Println("Could not set primary email address for person")
+		log.Println("Could not set primary email address for account")
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Println("PERSON CREATE - COMMIT FAILED")
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		setStringsForPerson(p)
-		rabbitmq.Send(svc.PersonSender, "created person")
+		setStringsForAccount(p)
+		rabbitmq.Send(svc.AccountSender, "created account")
 		requestUtils.RespondWithJSON(w, http.StatusCreated, p)
 	}
 }
 
-func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
+func (svc *AccountService) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := requestUtils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "accountId")
 	if !ok {
 		return
 	}
 
-	var p models.Person
+	var p models.Account
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
 		requestUtils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
@@ -235,7 +234,7 @@ func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 		requestUtils.RespondWithError(w, http.StatusNotFound, err.Error())
 		return
 	} else if !exists {
-		requestUtils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No person found for id: %d", id))
+		requestUtils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("No account found for id: %d", id))
 		return
 	}
 	// TODO update disabled
@@ -245,13 +244,13 @@ func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := p.UpdatePerson(tx); err != nil {
+	if err := p.UpdateAccount(tx); err != nil {
 		tx.Rollback()
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	if err := p.GetPerson(tx); err != nil {
+	if err := p.GetAccount(tx); err != nil {
 		tx.Rollback()
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -261,15 +260,15 @@ func (svc *PersonService) UpdatePerson(w http.ResponseWriter, r *http.Request) {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	} else {
-		setStringsForPerson(&p)
-		rabbitmq.Send(svc.PersonSender, "updated person")
+		setStringsForAccount(&p)
+		rabbitmq.Send(svc.AccountSender, "updated account")
 		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
 
-func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
+func (svc *AccountService) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, ok := requestUtils.GetInt64(w, vars, "personId")
+	id, ok := requestUtils.GetInt64(w, vars, "accountId")
 	if !ok {
 		return
 	}
@@ -280,8 +279,8 @@ func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO you can only delete yourself, unless you're an admin
-	p := models.Person{Id: id, Deleted: null.TimeFrom(time.Now())}
-	if err := p.DeletePerson(tx); err != nil {
+	p := models.Account{Id: id, Deleted: null.TimeFrom(time.Now())}
+	if err := p.DeleteAccount(tx); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -289,7 +288,7 @@ func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	// TODO delete email addresses
 
 	// Load new fields, like deleted_timestamp
-	if err := p.GetDeletedPerson(tx); err != nil {
+	if err := p.GetDeletedAccount(tx); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -297,15 +296,15 @@ func (svc *PersonService) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	} else {
-		setStringsForPerson(&p)
-		rabbitmq.Send(svc.PersonSender, "deleted person")
+		setStringsForAccount(&p)
+		rabbitmq.Send(svc.AccountSender, "deleted account")
 		requestUtils.RespondWithJSON(w, http.StatusOK, p)
 	}
 }
 
-func setStringsForPerson(p *models.Person) {
+func setStringsForAccount(p *models.Account) {
 	p.IdStr = strconv.FormatInt(p.Id, 10)
-	// TODO PrimaryEmailAddressID should not be nullable (because email#personId is not-nullable)
+	// TODO PrimaryEmailAddressID should not be nullable (because email#accountId is not-nullable)
 	p.PrimaryEmailAddressIdStr = strconv.FormatInt(p.PrimaryEmailAddressID.Int64, 10)
 	p.CurrentPasswordIdStr = strconv.FormatInt(p.CurrentPasswordID.Int64, 10)
 }

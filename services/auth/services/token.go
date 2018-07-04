@@ -47,7 +47,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var person *models.Person
+	var account *models.Account
 	var err error
 	if isEmailAddress(login) {
 		emailAddress := login
@@ -59,17 +59,17 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 			requestUtils.RespondWithError(w, http.StatusBadRequest, "Malformed email address.")
 			return
 		}
-		person, err = models.GetPersonByEmailAddress(svc.DB, emailAddress)
+		account, err = models.GetAccountByEmailAddress(svc.DB, emailAddress)
 	} else if isPhoneNumber(login) {
-		person, err = models.GetPersonByPhoneNumber(svc.DB, login)
+		account, err = models.GetAccountByPhoneNumber(svc.DB, login)
 	} else {
 		username := login
 		if len(username) < MinUsernameLength || len(username) > MaxUsernameLength {
 			requestUtils.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Username length must be between %d and %d.", MinUsernameLength, MaxUsernameLength))
 			return
 		}
-		person = &models.Person{Username: null.StringFrom(username)}
-		err = person.GetPersonByUsername(svc.DB)
+		account = &models.Account{Username: null.StringFrom(username)}
+		err = account.GetAccountByUsername(svc.DB)
 	}
 
 	if err != nil {
@@ -77,30 +77,30 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !person.CurrentPasswordID.Valid {
-		log.Printf("Person %d has no current password...\n", person.Id)
+	if !account.CurrentPasswordID.Valid {
+		log.Printf("Account %d has no current password...\n", account.Id)
 		requestUtils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
 		return
 	}
 
-	password := &models.Password{Id: person.CurrentPasswordID.Int64}
-	if err = password.GetPasswordForPersonID(svc.DB); err != nil {
-		log.Printf("No Person exists for password %d...\n", person.CurrentPasswordID.Int64)
+	password := &models.Password{Id: account.CurrentPasswordID.Int64}
+	if err = password.GetPasswordForAccountID(svc.DB); err != nil {
+		log.Printf("No Account exists for password %d...\n", account.CurrentPasswordID.Int64)
 		requestUtils.RespondWithError(w, http.StatusForbidden, "Authentication failed.")
 		return
 	}
 
 	passwordCorrect := models.MatchesHash(resource.Password, password)
 
-	l := &models.LoginAttempt{Id: snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: passwordCorrect, PersonID: person.Id}
+	l := &models.LoginAttempt{Id: snowflakeUtils.NewPrimaryKey(svc.SnowflakeNode), Created: time.Now(), Success: passwordCorrect, AccountID: account.Id}
 	if err := l.CreateLoginAttempt(svc.DB); err != nil {
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if passwordCorrect {
-		if person.MultiFactorRequired {
-			WriteMfaOptions(w, person)
+		if account.MultiFactorRequired {
+			WriteMfaOptions(w, account)
 		} else {
 			requestUtils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
 		}

@@ -17,7 +17,7 @@ type App struct {
 	Router          *mux.Router
 	DB              *sql.DB
 	RabbitmqEnabled bool
-	personService   services.PersonService
+	accountService  services.AccountService
 	passwordService services.PasswordService
 	emailAddressSvc services.EmailAddressService
 	tokenService    services.TokenService
@@ -41,7 +41,7 @@ func (a *App) Initialize(db *sql.DB, secret string, numWorkers int) {
 
 // initializeServices initializes the Service layer.
 func (a *App) initializeServices() {
-	a.personService = services.NewPersonService(a.DB, a.snowflakeNode, a.RabbitmqEnabled)
+	a.accountService = services.NewAccountService(a.DB, a.snowflakeNode, a.RabbitmqEnabled)
 	a.emailAddressSvc = services.NewEmailAddressService(a.DB, a.snowflakeNode, a.RabbitmqEnabled)
 	a.passwordService = services.PasswordService{
 		DB:             a.DB,
@@ -58,17 +58,17 @@ func (a *App) initializeRoutes() {
 
 	a.Router.HandleFunc("/token", a.tokenService.Authenticate).Methods("POST")
 
-	a.Router.HandleFunc("/person/{personId:[0-9]+}/password", a.passwordService.UpdatePassword).Methods("PUT")
+	a.Router.HandleFunc("/account/{accountId:[0-9]+}/password", a.passwordService.UpdatePassword).Methods("PUT")
 
-	a.Router.HandleFunc("/person", a.personService.GetPersons).Methods("GET")
-	a.Router.HandleFunc("/person/{personId:[0-9]+}", a.personService.GetPerson).Methods("GET")
-	a.Router.HandleFunc("/person", a.personService.CreatePerson).Methods("POST")
-	a.Router.HandleFunc("/person/{personId:[0-9]+}", a.personService.UpdatePerson).Methods("PUT")
-	a.Router.HandleFunc("/person/{personId:[0-9]+}", a.personService.DeletePerson).Methods("DELETE")
+	a.Router.HandleFunc("/account", a.accountService.GetAccounts).Methods("GET")
+	a.Router.HandleFunc("/account/{accountId:[0-9]+}", a.accountService.GetAccount).Methods("GET")
+	a.Router.HandleFunc("/account", a.accountService.CreateAccount).Methods("POST")
+	a.Router.HandleFunc("/account/{accountId:[0-9]+}", a.accountService.UpdateAccount).Methods("PUT")
+	a.Router.HandleFunc("/account/{accountId:[0-9]+}", a.accountService.DeleteAccount).Methods("DELETE")
 
-	// TODO get person by primary email address
-	// TODO get person by email address
-	// TODO get person by username
+	// TODO get account by primary email address
+	// TODO get account by email address
+	// TODO get account by username
 
 	a.Router.HandleFunc("/emailaddress", a.emailAddressSvc.GetEmailAddresses).Methods("GET")
 	a.Router.HandleFunc("/emailaddress/{id:[0-9]+}", a.emailAddressSvc.GetEmailAddress).Methods("GET")

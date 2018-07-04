@@ -33,8 +33,8 @@ func TestSendPasswordReset(t *testing.T) {
 	Convey("Given a user with an email and username", t, WithTransaction(db, func(tx *sql.Tx) {
 		tx, err := db.Begin()
 		So(err, ShouldBeNil)
-		tx.Exec(`INSERT INTO person (id, username) VALUES (1, 'kevin_chen')`)
-		tx.Exec(`INSERT INTO email_address (id, person_id, email_address, confirmed, is_primary) VALUES (1, 1, 'kevin.chen.bulk@gmail.com', TRUE, TRUE)`)
+		tx.Exec(`INSERT INTO account (id, username) VALUES (1, 'kevin_chen')`)
+		tx.Exec(`INSERT INTO email_address (id, account_id, email_address, confirmed, is_primary) VALUES (1, 1, 'kevin.chen.bulk@gmail.com', TRUE, TRUE)`)
 		err = tx.Commit()
 		So(err, ShouldBeNil)
 
@@ -50,21 +50,21 @@ func TestSendPasswordResetPhoneNumber(t *testing.T) {
 	Convey("Given a user with an email, username, and phone number", t, WithTransaction(db, func(tx *sql.Tx) {
 		tx, err := db.Begin()
 		So(err, ShouldBeNil)
-		tx.Exec(`INSERT INTO person (id, username) VALUES (1, 'kevin_chen')`)
-		tx.Exec(`INSERT INTO email_address (id, person_id, email_address, confirmed, is_primary) VALUES (1, 1, 'kevin.chen.bulk@gmail.com', TRUE, TRUE)`)
-		tx.Exec(`INSERT INTO phone_number (id, person_id, phone_number, confirmed) VALUES (1, 1, '5555555555', TRUE)`)
+		tx.Exec(`INSERT INTO account (id, username) VALUES (1, 'kevin_chen')`)
+		tx.Exec(`INSERT INTO email_address (id, account_id, email_address, confirmed, is_primary) VALUES (1, 1, 'kevin.chen.bulk@gmail.com', TRUE, TRUE)`)
+		tx.Exec(`INSERT INTO phone_number (id, account_id, phone_number, confirmed) VALUES (1, 1, '5555555555', TRUE)`)
 		err = tx.Commit()
 		So(err, ShouldBeNil)
 
 		Convey("Options should include emails and phone", func() {
 			res := sendCodeRequest("kevin_chen")
-			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","person_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","person_id":1}]}`)
+			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","account_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","account_id":1}]}`)
 
 			res = sendCodeRequest("kevin.chen.bulk@gmail.com")
-			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","person_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","person_id":1}]}`)
+			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","account_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","account_id":1}]}`)
 
 			res = sendCodeRequest("5555555555")
-			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","person_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","person_id":1}]}`)
+			So(res, ShouldEqual, `{"phone_numbers":[{"id":1,"phone_number":"55","account_id":1}],"email_addresses":[{"id":1,"email_address":"ke*************@g****.com","account_id":1}]}`)
 
 			res = sendCodeRequest("5554444444")
 			So(res, ShouldEqual, `"Reset request submitted."`)
@@ -105,7 +105,7 @@ func ClearTable(db *sql.DB) {
 	db.Exec("DELETE FROM password_reset_code")
 	db.Exec("DELETE FROM email_address")
 	db.Exec("DELETE FROM phone_number")
-	db.Exec("DELETE FROM person")
+	db.Exec("DELETE FROM account")
 }
 
 func ExecuteRequest(req *http.Request) *httptest.ResponseRecorder {

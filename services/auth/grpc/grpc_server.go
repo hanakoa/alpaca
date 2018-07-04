@@ -24,25 +24,25 @@ func (service *GrpcServer) ResetPassword(ctx context.Context, in *pb.ResetPasswo
 	if tx, err := service.DB.Begin(); err != nil {
 		return nil, err
 	} else {
-		p := &models.Password{PasswordText: null.StringFrom(in.NewPassword), PersonID: in.PersonId}
-		if _, err := service.PasswordService.UpdatePasswordHelper(tx, p, in.PersonId); err != nil {
+		p := &models.Password{PasswordText: null.StringFrom(in.NewPassword), AccountID: in.AccountId}
+		if _, err := service.PasswordService.UpdatePasswordHelper(tx, p, in.AccountId); err != nil {
 			return nil, err
 		}
 		if err := tx.Commit(); err != nil {
 			return nil, err
 		}
-		return &pb.ResetPasswordResponse{PersonId: in.PersonId}, nil
+		return &pb.ResetPasswordResponse{AccountId: in.AccountId}, nil
 	}
 }
 
-func (service *GrpcServer) GetPerson(ctx context.Context, in *pb.GetPersonRequest) (*pb.GetPersonResponse, error) {
-	log.Printf("Looking up person for email address: %s", in.EmailAddress)
+func (service *GrpcServer) GetAccount(ctx context.Context, in *pb.GetAccountRequest) (*pb.GetAccountResponse, error) {
+	log.Printf("Looking up account for email address: %s", in.EmailAddress)
 	e := &models.EmailAddress{EmailAddress: in.EmailAddress}
 	if err := e.GetEmailAddressByEmailAddress(service.DB); err != nil {
-		return &pb.GetPersonResponse{PersonId: 0}, err
+		return &pb.GetAccountResponse{AccountId: 0}, err
 	} else {
-		log.Printf("Found personId: %d", e.PersonID)
-		return &pb.GetPersonResponse{PersonId: e.PersonID}, nil
+		log.Printf("Found accountId: %d", e.AccountID)
+		return &pb.GetAccountResponse{AccountId: e.AccountID}, nil
 	}
 }
 
@@ -57,7 +57,7 @@ func (service *GrpcServer) Run() {
 	server := grpc.NewServer()
 
 	// Register our services
-	pb.RegisterPersonServiceServer(server, service)
+	pb.RegisterAccountServiceServer(server, service)
 	pb.RegisterResetPasswordServiceServer(server, service)
 
 	// Register reflection service on gRPC server.

@@ -82,8 +82,8 @@ func (svc *PasswordResetSvc) ResetPassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var personID int64
-	if personID, err = GetPersonIdForAccount(p.Account, tx); err != nil || personID == 0 {
+	var accountID int64
+	if accountID, err = GetAccountIdForAccount(p.Account, tx); err != nil || accountID == 0 {
 		tx.Rollback()
 		p.NewPassword = ""
 		// We deliberately do not leak if email is not found
@@ -91,9 +91,9 @@ func (svc *PasswordResetSvc) ResetPassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	c.PersonID = personID
+	c.AccountID = accountID
 
-	if err := authGRPC.ResetPassword(svc.PassClient, personID, p.NewPassword); err != nil {
+	if err := authGRPC.ResetPassword(svc.PassClient, accountID, p.NewPassword); err != nil {
 		tx.Rollback()
 		requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return

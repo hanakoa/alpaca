@@ -1,7 +1,7 @@
 .PHONY: protoc
 protoc:
-	protoc -I auth $(SERVICES_DIR)/auth/pb/auth.proto --go_out=plugins=grpc:auth
-	protoc -I mfa $(SERVICES_DIR)/mfa/pb/mfa.proto --go_out=plugins=grpc:mfa
+	protoc -I $(SERVICES_DIR)/auth/pb $(SERVICES_DIR)/auth/pb/*.proto --go_out=plugins=grpc:./services/auth/pb
+	protoc -I $(SERVICES_DIR)/mfa/pb $(SERVICES_DIR)/mfa/pb/*.proto --go_out=plugins=grpc:./services/mfa/pb
 
 .PHONY: install-proto
 install-proto:

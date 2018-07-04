@@ -61,8 +61,8 @@ func (svc *PasswordResetSvc) SendCodeOptions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var personID int64
-	if personID, err = GetPersonIdForAccount(p.Account, tx); err != nil || personID == 0 {
+	var accountID int64
+	if accountID, err = GetAccountIdForAccount(p.Account, tx); err != nil || accountID == 0 {
 		tx.Rollback()
 		// We deliberately do not leak if email is not found
 		// TODO RespondWithJSON doesn't actually return JSON
@@ -70,7 +70,7 @@ func (svc *PasswordResetSvc) SendCodeOptions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	sendCodeOptions, err := getSendOptions(personID, tx)
+	sendCodeOptions, err := getSendOptions(accountID, tx)
 	if err != nil {
 		tx.Rollback()
 		// We deliberately do not leak if email is not found
@@ -82,7 +82,7 @@ func (svc *PasswordResetSvc) SendCodeOptions(w http.ResponseWriter, r *http.Requ
 		log.Println("Fake sending an email")
 
 		expiration := time.Now().Add(time.Minute * 30)
-		if resetCode, err := models.NewPasswordResetCode(personID, expiration); err != nil {
+		if resetCode, err := models.NewPasswordResetCode(accountID, expiration); err != nil {
 			tx.Rollback()
 			requestUtils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
@@ -107,14 +107,14 @@ func (svc *PasswordResetSvc) SendCodeOptions(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func getSendOptions(personID int64, tx *sql.Tx) (*CodeOptionsResponse, error) {
+func getSendOptions(accountID int64, tx *sql.Tx) (*CodeOptionsResponse, error) {
 	options := &CodeOptionsResponse{}
-	if phoneNumbers, err := models.GetPhoneNumbersForPerson(personID, tx); err != nil {
+	if phoneNumbers, err := models.GetPhoneNumbersForAccount(accountID, tx); err != nil {
 		return nil, err
 	} else {
 		options.PhoneNumbers = phoneNumbers
 	}
-	if emailAddresses, err := models.GetEmailAddressesForPerson(personID, tx); err != nil {
+	if emailAddresses, err := models.GetEmailAddressesForAccount(accountID, tx); err != nil {
 		return nil, err
 	} else {
 		options.EmailAddresses = emailAddresses
@@ -122,7 +122,7 @@ func getSendOptions(personID int64, tx *sql.Tx) (*CodeOptionsResponse, error) {
 	return options, nil
 }
 
-func GetPersonIdForAccount(account string, tx *sql.Tx) (int64, error) {
+func GetAccountIdForAccount(account string, tx *sql.Tx) (int64, error) {
 	if isEmailAddress(account) {
 		if err := checkmail.ValidateFormat(account); err != nil {
 			log.Println(err.Error())
@@ -131,15 +131,15 @@ func GetPersonIdForAccount(account string, tx *sql.Tx) (int64, error) {
 		emailAddress := &models.EmailAddress{EmailAddress: account}
 		// TODO should be case insensitive
 		emailAddress.GetConfirmedEmailAddress(tx)
-		return emailAddress.PersonID, nil
+		return emailAddress.AccountID, nil
 	} else if isPhoneNumber(account) {
 		phoneNumber := &models.PhoneNumber{PhoneNumber: account}
 		phoneNumber.GetPhoneNumberByPhoneNumber(tx)
-		return phoneNumber.PersonID, nil
+		return phoneNumber.AccountID, nil
 	} else {
-		person := &models.Person{Username: account}
-		person.GetPersonByUsername(tx)
-		return person.ID, nil
+		account := &models.Account{Username: account}
+		account.GetAccountByUsername(tx)
+		return account.ID, nil
 	}
 }
 

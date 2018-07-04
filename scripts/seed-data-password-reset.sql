@@ -7,7 +7,7 @@ CREATE TABLE password_reset_code (
   expiration_timestamp timestamp NOT NULL,
   usable boolean NOT NULL,
   used boolean NOT NULL,
-  person_id bigint NOT NULL
+  account_id bigint NOT NULL
 ) WITH (OIDS=FALSE);
 
 -- Create syntax for TABLE 'email_address'
@@ -19,7 +19,7 @@ CREATE TABLE email_address (
   confirmed boolean NOT NULL DEFAULT FALSE,
   is_primary boolean NOT NULL,
   email_address varchar(255) NOT NULL,
-  person_id bigint NOT NULL
+  account_id bigint NOT NULL
 ) WITH (OIDS=FALSE);
 
 -- Create syntax for TABLE 'phone_number'
@@ -30,12 +30,12 @@ CREATE TABLE phone_number (
   last_modified_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   confirmed boolean NOT NULL DEFAULT FALSE,
   phone_number varchar(255) NOT NULL,
-  person_id bigint NOT NULL
+  account_id bigint NOT NULL
 ) WITH (OIDS=FALSE);
 
 -- TODO we should store current pass hash to enforce that user actually changes their pass
--- Create syntax for TABLE 'person'
-CREATE TABLE person (
+-- Create syntax for TABLE 'account'
+CREATE TABLE account (
   id bigint PRIMARY KEY,
   created_timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_timestamp timestamp NULL DEFAULT NULL,
@@ -47,6 +47,6 @@ CREATE TABLE person (
   UNIQUE (username)
 ) WITH (OIDS=FALSE);
 
-CREATE INDEX password_reset_code_person_id_idx ON password_reset_code (person_id);
-CREATE INDEX email_address_person_id_idx ON email_address (person_id);
-CREATE INDEX phone_number_person_id_idx ON phone_number (person_id);
+CREATE INDEX password_reset_code_account_id_idx ON password_reset_code (account_id);
+CREATE INDEX email_address_account_id_idx ON email_address (account_id);
+CREATE INDEX phone_number_account_id_idx ON phone_number (account_id);

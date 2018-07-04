@@ -8,7 +8,7 @@ CREATE TABLE authentication_code (
   expiration_timestamp timestamp NOT NULL,
   usable boolean NOT NULL,
   used boolean NOT NULL,
-  person_id bigint NOT NULL
+  account_id bigint NOT NULL
 ) WITH (OIDS=FALSE);
 
-CREATE INDEX authentication_code_person_id_code_expiration_idx ON authentication_code (person_id, code, expiration_timestamp);
+CREATE INDEX authentication_code_account_id_code_expiration_idx ON authentication_code (account_id, code, expiration_timestamp);

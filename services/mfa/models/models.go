@@ -14,14 +14,14 @@ type MFACode struct {
 	Expiration time.Time `json:"expiration"`
 	Usable     bool      `json:"usable"`
 	Used       bool      `json:"used"`
-	PersonID   int64     `json:"person_id"`
+	AccountID   int64     `json:"account_id"`
 }
 
 func (c *MFACode) Create(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"INSERT INTO authentication_code(id, code, created_timestamp, expiration_timestamp, usable, used, person_id) VALUES($1, $2, $3, $4, $5, $6, $7)",
-		c.ID, c.Code, c.Created, c.Expiration, c.Usable, c.Used, c.PersonID)
+		"INSERT INTO authentication_code(id, code, created_timestamp, expiration_timestamp, usable, used, account_id) VALUES($1, $2, $3, $4, $5, $6, $7)",
+		c.ID, c.Code, c.Created, c.Expiration, c.Usable, c.Used, c.AccountID)
 
 	return err
 }

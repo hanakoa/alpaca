@@ -55,6 +55,6 @@ func (a *App) ServeRest(addr, origin string) {
 
 // ListenForRabbitMqEvents listens for events
 func (a *App) ListenForRabbitMqEvents() {
-	l := rabbitmq.NewRabbitListener("alpaca-auth-exchange", "person.#", "alpaca-password-reset-queue")
+	l := rabbitmq.NewRabbitListener("alpaca-auth-exchange", "account.#", "alpaca-password-reset-queue")
 	l.Listen()
 }

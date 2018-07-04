@@ -73,10 +73,10 @@ convey:
 
 .PHONY: list-users
 list-users:
-	http localhost:8080/person
+	http localhost:8080/account
 
 .PHONY: create-user
 create-user:
-	http POST localhost:8080/person username="kevin_chen" email_address="kevin.chen.bulk.test@gmail.com"
+	http POST localhost:8080/account username="kevin_chen" email_address="kevin.chen.bulk.test@gmail.com"
 
 include makefiles/*.mk

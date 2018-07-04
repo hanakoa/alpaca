@@ -14,8 +14,8 @@ It consists of 3 endpoints:
 
 This library has a grpc dependency on the main auth µService for two reasons:
 
-* to get the `personId` for a given email address
-  * this is because this database persists personId, not email addresses, which can change with time
+* to get the `accountId` for a given email address
+  * this is because this database persists accountId, not email addresses, which can change with time
 * to perform the password reset
 
 ## Using the API
@@ -29,11 +29,11 @@ http POST localhost:8081/password-reset account="kevin.chen.bulk@gmail.com"
 The `account` field can be a username, email address, or phone number.
 
 If nothing fatal happens, this endpoint returns a 200 OK, even if an account does not exist, so we do not leak that info.
-If a person has additional means of login, besides just a primary email address, then we return a list of options:
+If a account has additional means of login, besides just a primary email address, then we return a list of options:
 
 ```json
 {
-  "person_id": 1,
+  "account_id": 1,
   "code": "B390A341-A88A-4F5A-5F8E-12656368D328",
   "options": [
     {

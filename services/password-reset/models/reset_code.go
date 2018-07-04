@@ -19,12 +19,12 @@ type PasswordResetCode struct {
 	Usable     bool      `json:"usable"`
 	// Expiration when the reset code expires
 	Expiration time.Time `json:"expiration"`
-	// PersonID the person to which this code belongs
-	PersonID   int64     `json:"person_id"`
+	// AccountID the account to which this code belongs
+	AccountID   int64     `json:"account_id"`
 }
 
 // NewPasswordResetCode generates a fresh, unused code for the given account, with the given expiration time.
-func NewPasswordResetCode(personID int64, expiration time.Time) (*PasswordResetCode, error) {
+func NewPasswordResetCode(accountID int64, expiration time.Time) (*PasswordResetCode, error) {
 	var id string
 	if u, err := uuid.NewRandom(); err != nil {
 		return nil, err
@@ -38,15 +38,15 @@ func NewPasswordResetCode(personID int64, expiration time.Time) (*PasswordResetC
 		Used:       false,
 		Usable:     true,
 		Expiration: expiration,
-		PersonID:   personID}, nil
+		AccountID:   accountID}, nil
 }
 
 // CreatePasswordResetCode inserts a reset code record into the database.
 func (c *PasswordResetCode) CreatePasswordResetCode(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"INSERT INTO password_reset_code(code, expiration_timestamp, usable, used, person_id) VALUES($1, $2, $3, $4, $5)",
-		c.Code, c.Expiration, c.Usable, c.Used, c.PersonID)
+		"INSERT INTO password_reset_code(code, expiration_timestamp, usable, used, account_id) VALUES($1, $2, $3, $4, $5)",
+		c.Code, c.Expiration, c.Usable, c.Used, c.AccountID)
 
 	return err
 }
@@ -83,7 +83,7 @@ func (c *PasswordResetCode) MarkAsUsed(q sqlexp.Querier) error {
 func (c *PasswordResetCode) MarkAllAsUnusable(q sqlexp.Querier) error {
 	_, err := q.ExecContext(
 		context.TODO(),
-		"UPDATE password_reset_code SET usable=FALSE WHERE person_id=$1",
-		c.PersonID)
+		"UPDATE password_reset_code SET usable=FALSE WHERE account_id=$1",
+		c.AccountID)
 	return err
 }

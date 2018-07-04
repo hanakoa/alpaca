@@ -4,12 +4,12 @@ package proto;
 
 message Send2FACodeRequest {
     string resetCode = 1;
-    int64 personId = 2;
+    int64 accountId = 2;
 }
 
 message Send2FACodeResponse {
     string resetCode = 1;
-    int64 personId = 2;
+    int64 accountId = 2;
 }
 
 service Send2FACodeService {

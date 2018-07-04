@@ -15,7 +15,7 @@ func TestGetEmailAddresses(t *testing.T) {
 	Convey("Given an empty database", t, func() {
 		ClearTable()
 
-		Convey("When we fetch people with an empty database", func() {
+		Convey("When we fetch accounts with an empty database", func() {
 			req, _ := http.NewRequest("GET", "/emailaddress", nil)
 			response := ExecuteRequest(req)
 
@@ -26,7 +26,7 @@ func TestGetEmailAddresses(t *testing.T) {
 			})
 		})
 
-		Convey("When we fetch people", func() {
+		Convey("When we fetch accounts", func() {
 			ids := AddUsers(20)
 
 			Convey("The response should be", func() {
@@ -64,7 +64,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		ClearTable()
 
 		Convey("When we try to create an email address with an id", func() {
-			payload := []byte(`{"id": 5, "person_id": 1, "email_address":"kevin.chen.bulk@gmail.com"}`)
+			payload := []byte(`{"id": 5, "account_id": 1, "email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -75,7 +75,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		})
 
 		Convey("When we try to create an email address without an email address", func() {
-			payload := []byte(`{"person_id": 1}`)
+			payload := []byte(`{"account_id": 1}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -86,7 +86,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		})
 
 		Convey("When we try to create an email address with an empty email address", func() {
-			payload := []byte(`{"person_id": 1, "email_address":" "}`)
+			payload := []byte(`{"account_id": 1, "email_address":" "}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -97,7 +97,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		})
 
 		Convey("When we try to create an email address with a malformed email address", func() {
-			payload := []byte(`{"person_id":1,"email_address":"kevin"}`)
+			payload := []byte(`{"account_id":1,"email_address":"kevin"}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -108,7 +108,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		})
 
 		Convey("When we try to create an email address with an excessively long email address", func() {
-			payload := []byte(`{"person_id":1,"email_address":"contact-admin-hello-webmaster-info-services-peter-crazy-but-oh-so-ubber-cool-english-alphabet-loverer-abcdefghijklmnopqrstuvwxyz@please-try-to.send-me-an-email-if-you-can-possibly-begin-to-remember-this-coz.this-is-the-longest-email-address-known-to-man-but-to-be-honest.this-is-such-a-stupidly-long-sub-domain-it-could-go-on-forever.pacraig.com"}`)
+			payload := []byte(`{"account_id":1,"email_address":"contact-admin-hello-webmaster-info-services-peter-crazy-but-oh-so-ubber-cool-english-alphabet-loverer-abcdefghijklmnopqrstuvwxyz@please-try-to.send-me-an-email-if-you-can-possibly-begin-to-remember-this-coz.this-is-the-longest-email-address-known-to-man-but-to-be-honest.this-is-such-a-stupidly-long-sub-domain-it-could-go-on-forever.pacraig.com"}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -119,7 +119,7 @@ func TestCreateEmailAddress(t *testing.T) {
 		})
 
 		Convey("When we try to create an email address that is confirmed", func() {
-			payload := []byte(`{"person_id":1,"email_address":"kevin.chen.bulk@gmail.com","confirmed":true}`)
+			payload := []byte(`{"account_id":1,"email_address":"kevin.chen.bulk@gmail.com","confirmed":true}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -131,8 +131,8 @@ func TestCreateEmailAddress(t *testing.T) {
 
 		Convey("When we create an email address with the required fields", func() {
 			ids := AddUsers(1)
-			personIDString := strconv.FormatInt(ids[0].Id, 10)
-			payload := []byte(`{"person_id":` + personIDString + `,"email_address":"kevin.chen.bulk@gmail.com"}`)
+			accountIDString := strconv.FormatInt(ids[0].Id, 10)
+			payload := []byte(`{"account_id":` + accountIDString + `,"email_address":"kevin.chen.bulk@gmail.com"}`)
 			req, _ := http.NewRequest("POST", "/emailaddress", bytes.NewBuffer(payload))
 			response := ExecuteRequest(req)
 
@@ -146,8 +146,8 @@ func TestCreateEmailAddress(t *testing.T) {
 				So(m["id_str"], ShouldNotEqual, "")
 				So(m["confirmed"], ShouldEqual, false)
 				So(m["email_address"], ShouldEqual, "kevin.chen.bulk@gmail.com")
-				So(m["person_id_str"], ShouldEqual, personIDString)
-				So(strconv.FormatInt(int64(m["person_id"].(float64)), 10), ShouldEqual, personIDString)
+				So(m["account_id_str"], ShouldEqual, accountIDString)
+				So(strconv.FormatInt(int64(m["account_id"].(float64)), 10), ShouldEqual, accountIDString)
 			})
 		})
 
@@ -162,7 +162,7 @@ func TestGetEmailAddress(t *testing.T) {
 			ids := AddUsers(1)
 
 			Convey("The response should be successful", func() {
-				// TODO using person ID instead of email ID
+				// TODO using account ID instead of email ID
 				req, _ := http.NewRequest("GET", fmt.Sprintf("/emailaddress/%d", ids[0].PrimaryEmailAddressID.Int64), nil)
 				response := ExecuteRequest(req)
 				So(response.Code, ShouldEqual, http.StatusOK)
@@ -189,13 +189,13 @@ func TestUpdateEmailAddress(t *testing.T) {
 		Convey("When we update an email address", func() {
 			ids := AddUsers(1)
 
-			personID := ids[0].Id
-			req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", personID), nil)
+			accountID := ids[0].Id
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/account/%d", accountID), nil)
 			response := ExecuteRequest(req)
 			var m map[string]interface{}
 			json.Unmarshal(response.Body.Bytes(), &m)
 
-			log.Println("Hitting endpoint:", fmt.Sprintf("/person/%d", personID))
+			log.Println("Hitting endpoint:", fmt.Sprintf("/account/%d", accountID))
 			log.Println("Got response:", response.Body)
 
 			primaryEmailAddressID := GetInt64(m, "primary_email_address_id_str")
@@ -206,9 +206,9 @@ func TestUpdateEmailAddress(t *testing.T) {
 			So(m["primary_email_address_id_str"], ShouldNotBeNil)
 			So(m["primary_email_address_id_str"], ShouldNotBeEmpty)
 			So(m["id_str"], ShouldNotEqual, m["primary_email_address_id_str"])
-			So(GetInt64(m, "id_str"), ShouldEqual, personID)
+			So(GetInt64(m, "id_str"), ShouldEqual, accountID)
 			So(primaryEmailAddressID, ShouldNotEqual, 0)
-			So(primaryEmailAddressID, ShouldNotEqual, personID)
+			So(primaryEmailAddressID, ShouldNotEqual, accountID)
 
 			Convey("The response should indicate success", func() {
 				payload := []byte(`{"confirmed":true}`)
@@ -222,7 +222,7 @@ func TestUpdateEmailAddress(t *testing.T) {
 				json.Unmarshal(response.Body.Bytes(), &m)
 
 				So(GetInt64(m, "id_str"), ShouldEqual, primaryEmailAddressID)
-				So(GetInt64(m, "person_id_str"), ShouldEqual, personID)
+				So(GetInt64(m, "account_id_str"), ShouldEqual, accountID)
 				So(m["confirmed"], ShouldEqual, true)
 			})
 		})
@@ -234,8 +234,8 @@ func TestDeleteEmailAddress(t *testing.T) {
 		ClearTable()
 		ids := AddUsers(1)
 
-		personID := ids[0].Id
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/person/%d", personID), nil)
+		accountID := ids[0].Id
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/account/%d", accountID), nil)
 		response := ExecuteRequest(req)
 		log.Println("GOT RESPONSE =", response.Body)
 		var m map[string]interface{}

@@ -16,8 +16,8 @@ func NewMFAClient(host string, port int) MFAClient {
 	return pb.NewSend2FACodeServiceClient(conn)
 }
 
-func Send2FACode(client MFAClient, personID int64, resetCode uuid.UUID) error {
-	request := &pb.Send2FACodeRequest{ResetCode: resetCode.String(), PersonId: personID}
+func Send2FACode(client MFAClient, accountID int64, resetCode uuid.UUID) error {
+	request := &pb.Send2FACodeRequest{ResetCode: resetCode.String(), AccountId: accountID}
 	_, err := client.Send2FACode(context.Background(), request)
 	return err
 }
