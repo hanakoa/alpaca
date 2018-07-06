@@ -24,11 +24,13 @@ type App struct {
 	snowflakeNode   *snowflake.Node
 	mfaClient       mfaGRPC.MFAClient
 	iterationCount  int
+	CookieConfig    *services.CookieConfiguration
+	JWTSecret       string
 }
 
 // Initialize initializes the database connection and services,
 // and creates routes for our REST API.
-func (a *App) Initialize(db *sql.DB, secret string, numWorkers int) {
+func (a *App) Initialize(db *sql.DB, numWorkers int) {
 	if a.RabbitmqEnabled {
 		log.Println("Creating RabbitMQ dispatcher...")
 		rabbitmq.NewDispatcher(numWorkers, 10)
@@ -50,7 +52,10 @@ func (a *App) initializeServices() {
 	a.tokenService = services.TokenService{
 		DB:            a.DB,
 		SnowflakeNode: a.snowflakeNode,
-		MFAClient:     a.mfaClient}
+		MFAClient:     a.mfaClient,
+		CookieConfig: a.CookieConfig,
+		JWTSecret: a.JWTSecret,
+	}
 }
 
 func (a *App) initializeRoutes() {

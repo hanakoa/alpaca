@@ -16,18 +16,28 @@ import (
 	"github.com/badoux/checkmail"
 	"fmt"
 	"github.com/ttacon/libphonenumber"
+	"github.com/dgrijalva/jwt-go"
+	"strconv"
 )
 
 type LoginRequest struct {
 	// Login is either an email address or username
-	Login     string `json:"login"`
-	Password  string `json:"password"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
 }
 
 type TokenService struct {
 	DB            *sql.DB
 	SnowflakeNode *snowflake.Node
 	MFAClient     mfaGRPC.MFAClient
+	JWTSecret     string
+	CookieConfig  *CookieConfiguration
+}
+
+type CookieConfiguration struct {
+	Name     string
+	Domain   string
+	HttpOnly bool
 }
 
 // Authenticate expects either an email address or username, and a password
@@ -98,15 +108,53 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if passwordCorrect {
-		if account.MultiFactorRequired {
-			WriteMfaOptions(w, account)
-		} else {
-			requestUtils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
-		}
-	} else {
+	// TODO look up users' groups from DB
+	groups := []string{}
+
+	if !passwordCorrect {
 		requestUtils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials.")
+		return
 	}
+
+	if account.MultiFactorRequired {
+		WriteMfaOptions(w, account)
+		return
+	}
+
+	now := time.Now()
+	claims := AlpacaClaims{
+		groups,
+		jwt.StandardClaims{
+			IssuedAt:  now.Unix(),
+			ExpiresAt: now.Add(24 * time.Hour).Unix(),
+			Subject:   strconv.FormatInt(account.Id, 10),
+			Issuer:    "alpaca",
+		},
+	}
+	// TODO support customizable signing method
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	jwtString, err := token.SignedString([]byte(svc.JWTSecret))
+	log.Println("Signing JWT with secret", svc.JWTSecret)
+	if err != nil {
+		requestUtils.RespondWithError(w, http.StatusInternalServerError, "Could not sign JWT: "+err.Error())
+		return
+	}
+	cookie := &http.Cookie{
+		Name:     svc.CookieConfig.Name,
+		Value:    jwtString,
+		Secure:   true,
+		HttpOnly: svc.CookieConfig.HttpOnly,
+		Domain:   svc.CookieConfig.Domain,
+	}
+	http.SetCookie(w, cookie)
+	requestUtils.RespondWithJSON(w, http.StatusOK, map[string]string{"msg": "Authenticated"})
+}
+
+// AlpacaGroups are an extension of jwt.StandardClaims, with roles.
+type AlpacaClaims struct {
+	// Groups a list of the current user's groups
+	Groups []string `json:"groups"`
+	jwt.StandardClaims
 }
 
 func isEmailAddress(s string) bool {

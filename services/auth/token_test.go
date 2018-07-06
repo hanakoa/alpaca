@@ -6,6 +6,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"testing"
+	"log"
 )
 
 func TestLogin(t *testing.T) {
@@ -26,6 +27,8 @@ func TestLogin(t *testing.T) {
 			req, err := http.NewRequest("POST", "/token", bytes.NewBuffer(payload))
 			So(err, ShouldBeNil)
 			response := ExecuteRequest(req)
+			log.Println("Set-Cookie", response.HeaderMap["Set-Cookie"])
+			log.Println("response", response.Body.String())
 			So(response.Code, ShouldEqual, http.StatusOK)
 		})
 	})

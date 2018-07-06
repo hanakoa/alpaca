@@ -12,6 +12,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"github.com/hanakoa/alpaca/services/auth/services"
 )
 
 func main() {
@@ -20,7 +21,6 @@ func main() {
 	host := envy.String("DB_HOST")
 	rabbitmqEnabled := envy.BoolOr("RABBITMQ_ENABLED", false)
 	dbName := envy.StringOr("DB_DATABASE", "alpaca_auth")
-	secret := envy.String("ALPACA_SECRET")
 	origin := envy.String("ORIGIN_ALLOWED")
 	port := envy.IntOr("APP_PORT", 8080)
 	maxWorkers := envy.IntOr("MAX_WORKERS", 1)
@@ -43,10 +43,20 @@ func main() {
 	}
 	log.Println("Using iteration count:", iterationCount)
 
-	a := App{RabbitmqEnabled: rabbitmqEnabled, iterationCount: iterationCount}
+	a := App{
+		RabbitmqEnabled: rabbitmqEnabled,
+		iterationCount: iterationCount,
+		CookieConfig: &services.CookieConfiguration{
+			// TODO use env vars
+			Name: "alpacajwt",
+			Domain: "http://localhost:3000",
+			HttpOnly: true,
+		},
+		JWTSecret: envy.String("ALPACA_SECRET"),
+	}
 	a.mfaClient = mfaGRPC.NewMFAClient(grpcMFAHost, grpcMFAPort)
 	a.snowflakeNode = snowflakeNode
-	a.Initialize(db, secret, maxWorkers)
+	a.Initialize(db, maxWorkers)
 	log.Printf("Running on port %d...\n", port)
 	wg.Add(1)
 	go a.ServeRest(fmt.Sprintf(":%d", port), origin)
