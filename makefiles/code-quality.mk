@@ -12,6 +12,6 @@ fmt:
 
 .PHONY: vet
 vet:
-	go tool vet auth
-	go tool vet password-reset
-	go tool vet mfa
+	go tool vet $(SERVICES_DIR)/auth
+	go tool vet $(SERVICES_DIR)/password-reset
+	go tool vet $(SERVICES_DIR)/mfa
