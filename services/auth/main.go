@@ -6,13 +6,13 @@ import (
 	"github.com/TeslaGov/envy"
 	"github.com/hanakoa/alpaca/services/auth/grpc"
 	"github.com/hanakoa/alpaca/services/auth/models"
+	"github.com/hanakoa/alpaca/services/auth/services"
 	mfaGRPC "github.com/hanakoa/alpaca/services/mfa/grpc"
 	snowflakeUtils "github.com/kevinmichaelchen/my-go-utils/snowflake"
 	sqlUtils "github.com/kevinmichaelchen/my-go-utils/sql"
 	"log"
 	"sync"
 	"time"
-	"github.com/hanakoa/alpaca/services/auth/services"
 )
 
 func main() {
@@ -45,11 +45,11 @@ func main() {
 
 	a := App{
 		RabbitmqEnabled: rabbitmqEnabled,
-		iterationCount: iterationCount,
+		iterationCount:  iterationCount,
 		CookieConfig: &services.CookieConfiguration{
 			// TODO use env vars
-			Name: "alpacajwt",
-			Domain: "http://localhost:3000",
+			Name:     "alpacajwt",
+			Domain:   "http://localhost:3000",
 			HttpOnly: true,
 		},
 		JWTSecret: envy.String("ALPACA_SECRET"),

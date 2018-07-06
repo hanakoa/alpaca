@@ -53,8 +53,8 @@ func (a *App) initializeServices() {
 		DB:            a.DB,
 		SnowflakeNode: a.snowflakeNode,
 		MFAClient:     a.mfaClient,
-		CookieConfig: a.CookieConfig,
-		JWTSecret: a.JWTSecret,
+		CookieConfig:  a.CookieConfig,
+		JWTSecret:     a.JWTSecret,
 	}
 }
 

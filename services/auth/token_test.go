@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
+	"log"
 	"net/http"
 	"testing"
-	"log"
 )
 
 func TestLogin(t *testing.T) {
