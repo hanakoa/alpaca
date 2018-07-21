@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/hanakoa/alpaca/services/auth/services"
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
 	"net/http"
-	"testing"
-	"github.com/hanakoa/alpaca/services/auth/services"
-	"github.com/dgrijalva/jwt-go"
 	"strings"
+	"testing"
 )
 
 func TestLogin(t *testing.T) {
