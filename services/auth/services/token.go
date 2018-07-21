@@ -109,7 +109,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO look up users' groups from DB
-	groups := []string{}
+	//groups := []string{}
 
 	if !passwordCorrect {
 		requestUtils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials.")
@@ -123,7 +123,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	claims := AlpacaClaims{
-		groups,
+		//groups,
 		jwt.StandardClaims{
 			IssuedAt:  now.Unix(),
 			ExpiresAt: now.Add(24 * time.Hour).Unix(),
@@ -153,7 +153,7 @@ func (svc *TokenService) Authenticate(w http.ResponseWriter, r *http.Request) {
 // AlpacaGroups are an extension of jwt.StandardClaims, with roles.
 type AlpacaClaims struct {
 	// Groups a list of the current user's groups
-	Groups []string `json:"groups"`
+	//Groups []string `json:"groups,omitempty"`
 	jwt.StandardClaims
 }
 

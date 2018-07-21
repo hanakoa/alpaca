@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 		iterationCount:  10,
 		CookieConfig: &services.CookieConfiguration{
 			Name:     "alpacajwt",
-			Domain:   "http://localhost:3000",
+			Domain:   "",
 			HttpOnly: true,
 		},
 		JWTSecret: "4FFFA6A10E744158464EB55133A475673264748804882A1B4F8106D545C584EF",
