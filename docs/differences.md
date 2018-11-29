@@ -68,7 +68,7 @@ iterations it must perform such that hashing takes roughly a second, or some oth
 
 ### FUTURE
 - Security -- Backup codes
-- Security -- "New device", based on IP address
+- Security -- "New device", based on IP address/MAC address combination
 - Security -- support [YubiKeys](https://www.yubico.com/)
 - Security -- support [Authy](https://authy.com/), [Google Authenticator](https://en.wikipedia.org/wiki/Google_Authenticator)
 - Database -- look into [CockroachDB](https://github.com/cockroachdb/cockroach)
